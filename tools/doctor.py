@@ -37,9 +37,9 @@ payload = {"ok": all(value[0] for value in checks.values()), "runtime": str(RUNT
 if "--json" in sys.argv:
     print(json.dumps(payload, ensure_ascii=False, indent=2))
 else:
-    print("\nДиагностика Dubbing Studio")
+    print("\nDubbing Studio diagnostics")
     print(f"Runtime: {RUNTIME}\n")
     for name, result in payload["checks"].items():
-        print(f"{'OK ' if result['ok'] else 'НЕТ'}  {name}" + (f" — {result['detail']}" if result["detail"] else ""))
-    print("\nСистема готова." if payload["ok"] else "\nНе всё установлено. Повторно запустите setup.bat.")
+        print(f"{'OK ' if result['ok'] else 'MISS'}  {name}" + (f" — {result['detail']}" if result["detail"] else ""))
+    print("\nSystem ready." if payload["ok"] else "\nSetup is incomplete. Run setup.bat again.")
 raise SystemExit(0 if payload["ok"] else 1)

@@ -89,7 +89,7 @@ def main() -> None:
         sf.write(path, reference, sample_rate, subtype="PCM_16")
         speakers.append({
             "id": f"SPEAKER_{label:02d}",
-            "label": f"Говорящий {label + 1}",
+            "label": f"Speaker {label + 1}",
             "reference": str(path),
             "profile": "A natural native speaker matching the source age and conversational energy, realistic and not theatrical.",
         })

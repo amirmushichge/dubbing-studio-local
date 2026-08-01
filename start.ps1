@@ -6,25 +6,26 @@ $portableFfmpeg = Get-ChildItem -LiteralPath (Join-Path $runtimeRoot 'tools\ffmp
 if ($portableFfmpeg) { $env:Path = "$($portableFfmpeg.Directory.FullName);$env:Path" }
 
 if (-not (Test-Path -LiteralPath $python)) {
-    throw 'Dubbing Studio не установлен. Запустите setup.bat и дождитесь сообщения об успешной установке.'
+    throw 'Dubbing Studio is not installed. Run setup.bat and wait for the success message.'
 }
 
 $env:PYTHONUTF8 = '1'
 $doctor = Join-Path $projectRoot 'tools\doctor.py'
 & $python $doctor
-if ($LASTEXITCODE -ne 0) { throw 'Не все компоненты готовы. Повторно запустите setup.bat.' }
+if ($LASTEXITCODE -ne 0) { throw 'Some components are missing. Run setup.bat again.' }
 
 $occupied = Get-NetTCPConnection -LocalPort 8765 -State Listen -ErrorAction SilentlyContinue
 if ($occupied) {
     Start-Process 'http://127.0.0.1:8765' | Out-Null
-    Write-Host 'Dubbing Studio уже запущен; открыта существующая вкладка.' -ForegroundColor Yellow
+    Write-Host 'Dubbing Studio is already running; the existing workspace was opened.' -ForegroundColor Yellow
     exit 0
 }
 
 Start-Job -ScriptBlock { Start-Sleep -Seconds 2; Start-Process 'http://127.0.0.1:8765' } | Out-Null
 Write-Host 'Dubbing Studio: http://127.0.0.1:8765' -ForegroundColor Green
-Write-Host 'Чтобы остановить сервер, закройте это окно или нажмите Ctrl+C.'
+Write-Host 'Close this window or press Ctrl+C to stop the server.'
 & $python -m uvicorn app.main:app --host 127.0.0.1 --port 8765 --app-dir $projectRoot
+
 
 
 

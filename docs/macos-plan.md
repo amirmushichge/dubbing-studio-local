@@ -1,37 +1,37 @@
-# План версии для macOS Apple Silicon
+# macOS Apple Silicon port plan
 
-## Цель
+## Goal
 
-Сохранить тот же веб-интерфейс и критерии качества на Mac M1/M2/M3/M4, не выдавая медленную CPU-сборку за полноценный порт. Intel Mac не входит в целевую платформу.
+Preserve the same workflow and quality gates on M1/M2/M3/M4 Macs without presenting a slow CPU build as a production port. Intel Macs are outside the target platform.
 
-## Что нельзя перенести напрямую
+## Components that cannot move unchanged
 
-- CUDA-устройства во всех AI workers;
-- FP8-загрузка Hy-MT2;
-- `h264_nvenc` в финальном FFmpeg-рендере;
-- CUDA-зависимости Seed-VC и Demucs;
-- текущие пороги скорости, памяти и голосового QA.
+- CUDA devices used by every AI worker;
+- FP8 loading for Hy-MT2;
+- `h264_nvenc` in the final FFmpeg render;
+- CUDA-specific Seed-VC and Demucs paths;
+- current speed, memory and voice-QA thresholds.
 
-## План работ
+## Work plan
 
-1. Ввести backend-профили `cuda` и `apple_silicon`, не размножая бизнес-логику.
-2. Заменить ASR на оптимизированный для Apple Silicon backend и сравнить пунктуацию/таймкоды с текущим faster-whisper Large v3.
-3. Подобрать локальную переводческую модель в формате, эффективно работающем через MLX/Metal; повторить тесты имён, чисел, длины и пунктуации.
-4. Проверить Qwen3-TTS и Seed-VC на Metal. Если стабильность недостаточна — выбрать отдельную TTS/voice-conversion пару, но сохранить двухэтапный принцип «нативное произношение → перенос тембра».
-5. Переключить кодирование на `h264_videotoolbox` и проверить субтитры, AAC, длительность и декодирование.
-6. Создать `setup.command`, `start.command` и диагностику Homebrew/Xcode Command Line Tools без ручного редактирования конфигов.
-7. Прогнать эталонный набор: один/несколько говорящих, мужчина/женщина/ребёнок, русский↔английский и русский→китайский.
+1. Introduce `cuda` and `apple_silicon` backend profiles without duplicating orchestration logic.
+2. Replace ASR with an Apple Silicon-optimized backend and compare punctuation and timestamps against faster-whisper Large v3.
+3. Select a local translation model that runs efficiently through MLX/Metal and repeat name, number, length and punctuation tests.
+4. Validate Qwen3-TTS and Seed-VC on Metal. If stability is insufficient, select a separate TTS and voice-conversion pair while preserving the two-stage principle: native pronunciation first, identity transfer second.
+5. Use `h264_videotoolbox` and validate captions, AAC, duration and complete decoding.
+6. Create `setup.command`, `start.command` and Homebrew / Xcode Command Line Tools diagnostics without manual config edits.
+7. Run the reference set: one and multiple speakers, adult and child voices, Russian ↔ English and Russian → Chinese.
 
-## Критерии готовности
+## Release gates
 
-- установка на чистом Apple Silicon Mac одним запуском;
-- полностью локальный инференс после первой загрузки;
-- отсутствие сильного исходного акцента в целевом языке;
-- стабильный тембр каждого говорящего;
-- корректная пунктуационная интонация;
-- отсутствие щелчков на границах;
-- скорость реплик не выше установленного лимита;
-- итоговый MP4 полностью декодируется;
-- документация отдельно указывает требования к unified memory и ожидаемую скорость.
+- one-command setup on a clean Apple Silicon Mac;
+- fully local inference after the first download;
+- no strong source accent in the target language;
+- stable identity for every speaker;
+- punctuation-aware delivery;
+- no boundary clicks;
+- line speed remains below the defined limit;
+- the final MP4 decodes completely;
+- documented unified-memory requirements and expected speed.
 
-До выполнения этих пунктов macOS должна обозначаться как roadmap, а не как поддерживаемая платформа.
+Until every gate passes, macOS remains a roadmap item rather than a supported platform.

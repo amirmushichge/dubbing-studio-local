@@ -48,7 +48,7 @@ def main() -> None:
     for repo, revision, relative in MODELS:
         download_local(repo, revision, runtime / relative)
     download_seed(runtime / "seed-vc")
-    print("\nВсе модели загружены.")
+    print("\nAll models downloaded.")
 
 
 if __name__ == "__main__":

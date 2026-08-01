@@ -1,59 +1,49 @@
-# Архитектура MVP
+# MVP architecture
 
-## Принцип
+## Principle
 
-Приложение является локальным оркестратором существующих моделей. Веб-сервер
-не загружает тяжёлые модели в свою память: он запускает соответствующий worker
-в виртуальном окружении модели и сохраняет результат в каталоге проекта.
+Dubbing Studio is a local orchestrator for specialized models. The web server does not retain heavy models in its own process; it starts each worker inside that model’s isolated environment and stores artifacts in the project directory.
 
-## Состояния проекта
+## Project state
 
-`uploaded -> queued -> analyzing -> review -> queued -> rendering -> complete`
+`uploaded → queued → analyzing → review → queued → rendering → complete`
 
-Любой этап может перейти в `failed`. После исправления текста или настройки
-проект можно запустить повторно, не удаляя предыдущие артефакты.
+Any stage may transition to `failed`. A project can be corrected and run again without deleting earlier artifacts.
 
-## Каталог проекта
+## Project directory
 
 ```text
 data/projects/<id>/
-  input/       исходный ролик
-  preview/     миниатюра
-  work/        WAV, JSON, профили и промежуточный синтез
-  output/      готовые версии
-  logs/        stdout/stderr каждого worker
-  project.json состояние, настройки, QA и журнал
+  input/       source video
+  preview/     thumbnail
+  work/        WAV, JSON, profiles and intermediate synthesis
+  output/      finished versions
+  logs/        stdout/stderr for every worker
+  project.json state, settings, QA and event history
 ```
 
-## GPU-очередь
+## GPU queue
 
-Backend содержит одну очередь. Это предотвращает одновременную загрузку
-Hy-MT2, Qwen3-TTS и Seed-VC в видеопамять RTX 4080 Super. Проекты и положение
-в очереди видны в интерфейсе.
+The backend runs a single heavy-task queue. This prevents Hy-MT2, Qwen3-TTS and Seed-VC from competing for RTX 4080 Super VRAM. Queue state is visible in the interface.
 
-## Основной конвейер
+## Pipeline
 
-1. `ffprobe` и кадр-превью.
-2. FFmpeg извлекает PCM-аудио.
-3. Demucs `htdemucs` разделяет vocals/background.
-4. Faster-Whisper Large v3 создаёт реплики и таймкоды.
-5. Resemblyzer и агломеративная кластеризация определяют говорящих и собирают
-   по 10–25 секунд референса на человека.
-6. Пользователь проверяет текст, пунктуацию и говорящих.
-7. Hy-MT2 переводит JSON без перестановки строк и адаптирует длину.
-8. Qwen3-TTS VoiceDesign создаёт нативный артикуляционный профиль.
-9. Qwen3-TTS Base синтезирует реплики детерминированно.
-10. В режиме клона Seed-VC V1 переносит только идентичность исходного голоса.
-11. Реплики выравниваются по таймкодам с пределом ускорения 1.35x и fades.
-12. FFmpeg смешивает фон, прожигает выбранный стиль субтитров и кодирует MP4.
-13. QA повторно распознаёт дубляж, сравнивает speaker embeddings, проверяет
-    границы, LUFS, true peak, потоки и полное декодирование.
+1. `ffprobe` reads metadata and FFmpeg creates a thumbnail.
+2. FFmpeg extracts PCM audio.
+3. Demucs `htdemucs` separates speech and background.
+4. faster-whisper Large v3 produces lines, words and timestamps.
+5. Voice embeddings plus agglomerative clustering identify speakers and collect 10–25 seconds of reference audio per person.
+6. The user reviews transcript, punctuation and speaker assignment.
+7. Hy-MT2 translates ordered JSON and adapts line length.
+8. Qwen3-TTS VoiceDesign creates native articulation profiles.
+9. Qwen3-TTS Base synthesizes deterministic lines.
+10. In clone mode, Seed-VC V1 transfers only the original voice identity.
+11. Lines fit the original timeline with a 1.35× maximum speed and boundary fades.
+12. FFmpeg mixes background, burns optional captions and encodes MP4.
+13. QA re-transcribes the dub, compares speaker embeddings and checks boundaries, LUFS, true peak, streams and full decoding.
 
-## Границы MVP
+## MVP limits
 
-- Производственный TTS доступен для 10 языков Qwen3-TTS.
-- Каталожный голос разрешён при одном говорящем; для нескольких используется
-  отдельный клон каждого реального человека.
-- Автоматическое число говорящих — эвристика. Экран проверки остаётся
-  обязательным безопасным этапом.
-
+- Production TTS is exposed for ten validated output languages.
+- Catalog voice mode supports one speaker. Multi-speaker video uses a separate clone for each person.
+- Automatic speaker count is heuristic. Human review remains a required quality gate.

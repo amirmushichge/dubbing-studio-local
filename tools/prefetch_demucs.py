@@ -8,6 +8,6 @@ from demucs.pretrained import get_model
 
 torch_home = Path(os.environ["TORCH_HOME"])
 torch_home.mkdir(parents=True, exist_ok=True)
-print(f"Загрузка htdemucs в {torch_home}")
+print(f"Downloading htdemucs to {torch_home}")
 get_model("htdemucs")
-print("htdemucs готов.")
+print("htdemucs is ready.")

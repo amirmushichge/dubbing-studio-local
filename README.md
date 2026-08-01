@@ -1,197 +1,194 @@
 # Dubbing Studio Local
 
-Локальная студия перевода и профессионального дубляжа видео. Она распознаёт речь, отделяет её от музыки, переводит реплики, создаёт естественную речь на другом языке, возвращает тембр каждого исходного говорящего, синхронизирует фразы и собирает готовое видео. После установки обработка идёт на вашем компьютере: исходные видео и голоса не отправляются в облачный API.
+A fully local workspace for translating and professionally dubbing video. Dubbing Studio transcribes speech, separates voices from the original mix, translates each line, generates native pronunciation, restores the identity of every speaker, fits the performance to the original timing and exports a finished video.
 
-> Клонируйте только собственный голос или голос человека, давшего вам явное разрешение. Не используйте программу для обмана, impersonation, мошенничества или обхода проверки личности.
+After the first setup, inference runs on your computer. Source videos and voice samples are not sent to a cloud API.
 
-![Главный экран Dubbing Studio](docs/images/dashboard.png)
+> Clone only your own voice or a voice you have explicit permission to use. Never use this software for deception, impersonation, fraud or identity-verification bypass.
 
-## Что умеет
+![Dubbing Studio home screen](docs/images/dashboard.png)
 
-- Загружать MP4, MOV, MKV, WebM и M4V до 12 ГБ.
-- Автоматически определять язык и число говорящих или принимать их вручную.
-- Редактировать распознанный текст до перевода.
-- Переводить локальной моделью Tencent Hy-MT2.
-- Дублировать с сохранением тембра отдельно для каждого говорящего.
-- Для видео с одним голосом использовать выбранный готовый голос вместо клона и прослушивать его заранее.
-- Регулировать выразительность без театрального переигрывания.
-- Оставлять фоновую музыку и менять её громкость.
-- Отключать субтитры либо выбирать один из шести дизайнов.
-- Контролировать длительность, произношение, сходство голоса, щелчки, пики и декодируемость результата.
-- Работать без интернета после полной первой установки.
+## What it does
 
-## Требования
+- Imports MP4, MOV, MKV, WebM and M4V files up to 12 GB.
+- Detects the source language and number of speakers automatically or accepts manual values.
+- Lets you correct the transcript and punctuation before translation.
+- Translates locally with Tencent Hy-MT2.
+- Preserves a separate, stable voice identity for every speaker.
+- Offers previewable catalog voices for single-speaker videos when cloning is not needed.
+- Controls delivery expression and background-audio level.
+- Disables captions completely or applies one of six caption treatments.
+- Checks duration, recognition coverage, voice similarity, boundaries, peaks, loudness and output decoding.
+- Works offline after the complete first installation.
 
-Автоустановка рассчитана на **Windows 10/11 и видеокарту NVIDIA**.
+## System requirements
 
-| Компонент | Минимум | Рекомендуется |
+Automatic setup currently targets **Windows 10/11 with an NVIDIA GPU**.
+
+| Component | Minimum | Recommended |
 |---|---:|---:|
-| Видеокарта | NVIDIA, 12 ГБ VRAM | RTX 4080/4080 Super или лучше, 16 ГБ+ |
-| ОЗУ | 24 ГБ | 32 ГБ+ |
-| Свободное место | 45 ГБ | 55 ГБ+ с запасом для проектов |
-| Интернет | нужен при первой установке | стабильное соединение |
-| Драйвер | свежий NVIDIA Driver | NVIDIA Studio Driver |
+| GPU | NVIDIA with 12 GB VRAM | RTX 4080 / 4080 Super or better, 16 GB+ |
+| System memory | 24 GB | 32 GB+ |
+| Free storage | 45 GB | 55 GB+ plus project storage |
+| Internet | Required for initial setup | Stable broadband connection |
+| Driver | Recent NVIDIA driver | NVIDIA Studio Driver |
 
-AMD, Intel GPU, macOS и Linux пока не поддерживаются готовым установщиком. На CPU этот стек практически непригоден по скорости. Время первой установки зависит от интернета; модели занимают около 30 ГБ. Сам дубляж обычно длится заметно дольше продолжительности ролика.
+AMD GPUs, Intel GPUs, macOS and Linux are not supported by the production installer yet. CPU-only processing is not practical for this model stack. The models occupy roughly 30 GB, and a finished dub normally takes longer to process than the source video duration.
 
 ### macOS
 
-Версия для Mac запланирована как отдельный порт для **Apple Silicon (M1 и новее)**. Текущую Windows-сборку нельзя честно перенести одним скриптом: CUDA/FP8/NVENC-компоненты нужно заменить, а качество клонирования и произношения заново измерить на Metal/MLX. Поэтому Intel Mac не планируется, а Apple Silicon не заявлен поддерживаемым до прохождения тех же голосовых QA-тестов. Технический план: [docs/macos-plan.md](docs/macos-plan.md).
+An Apple Silicon edition is planned for M1 and newer Macs. This is a real runtime port, not a renamed setup script: CUDA, FP8 and NVENC components must be replaced and voice quality must be calibrated again on Metal/MLX. Intel Macs are not planned. See the [Apple Silicon port plan](docs/macos-plan.md).
 
-## Установка для новичка
+## Installation for complete beginners
 
-### 1. Скачайте проект
+### 1. Download the project
 
-На странице GitHub нажмите **Code → Download ZIP**. Распакуйте ZIP в обычную папку, например:
+On GitHub, select **Code → Download ZIP**, then extract the archive to a normal folder such as:
 
 ```text
 F:\Dubbing-Studio
 ```
 
-Не запускайте программу прямо из ZIP и не помещайте её в `Program Files`.
+Do not run the application from inside the ZIP and do not place it in `Program Files`.
 
-Если умеете пользоваться Git, можно вместо ZIP выполнить:
+Git users can clone it instead:
 
 ```powershell
 git clone https://github.com/amirmushichge/dubbing-studio-local.git
 cd dubbing-studio-local
 ```
 
-### 2. Запустите установку
+### 2. Run automatic setup
 
-Дважды щёлкните **`setup.bat`** и дождитесь зелёного сообщения об успехе. Скрипт сам:
+Double-click **`setup.bat`** and wait for the green success message. Setup will:
 
-1. проверит Windows, свободное место и NVIDIA;
-2. через официальный `winget` установит недостающие Git, Python 3.10 и FFmpeg;
-3. создаст изолированные Python-окружения;
-4. загрузит проверенные версии Qwen3-TTS, Hy-MT2, faster-whisper, Demucs и Seed-VC;
-5. проведёт диагностику;
-6. создаст ярлык на рабочем столе.
+1. check Windows, disk capacity and NVIDIA support;
+2. install missing Git, Python 3.10 and FFmpeg through `winget` or a pinned fallback installer;
+3. create isolated Python environments;
+4. download tested revisions of Qwen3-TTS, Hy-MT2, faster-whisper, Demucs and Seed-VC;
+5. run diagnostics;
+6. create a desktop shortcut.
 
-Windows может спросить разрешение на установку пакетов — подтвердите. Окно можно закрыть при обрыве интернета: повторный запуск `setup.bat` продолжит загрузку, а не начнёт всё заново.
+Windows may ask for permission to install prerequisites. If the connection is interrupted, run `setup.bat` again: model downloads resume instead of starting over.
 
-### 3. Запустите студию
+### 3. Start the studio
 
-Дважды щёлкните **`start.bat`** или ярлык **Dubbing Studio**. Откроется браузер с адресом:
+Double-click **`start.bat`** or the **Dubbing Studio** desktop shortcut. Your browser opens:
 
 ```text
 http://127.0.0.1:8765
 ```
 
-Это локальный адрес вашего компьютера, не публичный сайт. Пока идёт обработка, не закрывайте чёрное окно сервера. Для остановки закройте окно или нажмите `Ctrl+C`.
+This is a private address on your own computer, not a public website. Keep the server window open while a project is processing. Close it or press `Ctrl+C` to stop the studio.
 
-## Как сделать дубляж
+## Creating a dub
 
-1. Перетащите видео на экран или выберите файл.
-2. Укажите исходный язык или оставьте автоопределение.
-3. Укажите число говорящих или оставьте `Авто`.
-4. Запустите анализ.
-5. Проверьте текст, пунктуацию и распределение говорящих. Исправьте ошибки — от этого напрямую зависит перевод и интонация.
-6. Выберите язык результата.
-7. Выберите голос:
-   - **Клон оригинала** — сохраняет отдельный тембр и манеру каждого человека;
-   - **Голос из каталога** — создаёт новый голос и доступен для видео с одним говорящим.
-8. Настройте выразительность и громкость фона. `70%` означает, что фон тише оригинала на 30%.
-9. Включите или отключите субтитры. При включении выберите дизайн и решите, вшивать ли текст в изображение.
-10. Выберите качество и запустите дубляж.
-11. Просмотрите предупреждения контроля качества, затем скачайте MP4 и при необходимости отдельный SRT.
+1. Drop a video onto the home screen or choose a file.
+2. Select the source language or leave automatic detection enabled.
+3. Select the number of speakers or leave it on automatic.
+4. Start the analysis.
+5. Review the transcript, punctuation and speaker assignments. These corrections directly affect translation and delivery.
+6. Select the output language.
+7. Choose a voice mode:
+   - **Preserve original voices** retains a separate timbre and manner for each person;
+   - **Choose a new voice** creates a catalog voice for a single-speaker video.
+8. Set expression and background-audio level. A background value of `70%` means 30% quieter than the source mix.
+9. Enable or disable captions. If enabled, select a treatment and whether captions should be burned into the video.
+10. Select render quality and create the dub.
+11. Review the quality report, then download the MP4 and optional SRT.
 
-Рекомендуемый безопасный старт: клон оригинала, умеренная выразительность, фон 45–60%, субтитры «Чистый», качество «Высокое».
+Recommended starting point: original voice preservation, moderate expression, 45–60% background audio, Clean captions and High quality.
 
-![Настройки результата](docs/images/delivery.png)
+![Dub configuration](docs/images/delivery.png)
 
-## Языки результата
+## Output languages
 
-Сейчас интерфейс предлагает:
-
-| Код | Язык |
+| Code | Language |
 |---|---|
-| `zh` | китайский, упрощённый |
-| `en` | английский |
-| `ru` | русский |
-| `de` | немецкий |
-| `fr` | французский |
-| `es` | испанский |
-| `it` | итальянский |
-| `pt` | португальский |
-| `ja` | японский |
-| `ko` | корейский |
+| `zh` | Chinese, Simplified |
+| `en` | English |
+| `ru` | Russian |
+| `de` | German |
+| `fr` | French |
+| `es` | Spanish |
+| `it` | Italian |
+| `pt` | Portuguese |
+| `ja` | Japanese |
+| `ko` | Korean |
 
-Распознавание исходного видео понимает больше языков, но качественный выход ограничен этим проверенным пересечением переводчика и синтеза речи. Боснийский в текущем проверенном наборе отсутствует; добавлять его одной строчкой нельзя без отдельной проверки TTS, произношения и QA.
+Source transcription supports more languages, but production output is restricted to the tested intersection of the translator and speech synthesizer. Bosnian is not in the validated set yet; it requires separate TTS, pronunciation and quality calibration.
 
-## Что происходит внутри
+## How the pipeline works
 
 ```text
-видео
-  → FFmpeg извлекает звук
-  → Demucs разделяет речь и фон
-  → faster-whisper распознаёт слова и тайминг
-  → голосовые эмбеддинги разделяют говорящих
-  → Hy-MT2 переводит и сохраняет пунктуацию
-  → Qwen3-TTS создаёт нативное произношение целевого языка
-  → Seed-VC возвращает тембр каждого исходного голоса
-  → реплики подгоняются к исходным временным слотам
-  → FFmpeg смешивает фон, голос и субтитры
-  → автоматический QA проверяет результат
+video
+  → FFmpeg extracts audio
+  → Demucs separates speech from the original mix
+  → faster-whisper transcribes words and timing
+  → voice embeddings group individual speakers
+  → Hy-MT2 translates while preserving punctuation
+  → Qwen3-TTS creates native target-language pronunciation
+  → Seed-VC restores each original voice identity
+  → lines are fitted to the original time slots
+  → FFmpeg mixes background, voices and captions
+  → automated QA validates the result
 ```
 
-Почему используются два голосовых этапа: прямой перенос голоса между языками часто даёт сильный акцент и нестабильный тембр. Здесь Qwen сначала формирует нативную речь, а Seed-VC переносит на неё тембр оригинала. Это лучше разделяет произношение и идентичность голоса.
+The two-stage voice design is intentional. Direct cross-language voice conversion can preserve the source accent and destabilize identity. Qwen first creates native pronunciation; Seed-VC then transfers the original timbre onto that performance.
 
-## Где лежат файлы
+## Project files
 
 ```text
 Dubbing-Studio/
-├─ app/                 веб-сервер и оркестрация
-├─ static/              интерфейс
-├─ workers/             ASR, перевод, TTS, клонирование и QA
-├─ runtime/             окружения и модели; создаётся setup.bat
-├─ data/projects/       исходники, промежуточные файлы и результаты
-├─ logs/                журналы установки
-└─ tests/               лёгкие автоматические тесты
+├─ app/                 web server and orchestration
+├─ static/              English AmirStyle interface
+├─ workers/             ASR, translation, TTS, voice conversion and QA
+├─ runtime/             environments and models created by setup.bat
+├─ data/projects/       sources, intermediate files and exports
+├─ logs/                setup logs
+└─ tests/               lightweight automated tests
 ```
 
-`runtime/`, `data/` и `logs/` не попадают в Git. Для проектов на другом диске скопируйте `.env.example` в `.env` и задайте `DUBBING_STUDIO_DATA`; переменные также можно задать в Windows. Для моделей используйте `DUBBING_STUDIO_RUNTIME` **до первой установки**.
+`runtime/`, `data/` and `logs/` are excluded from Git. To keep projects on another drive, copy `.env.example` to `.env` and set `DUBBING_STUDIO_DATA`. To place models elsewhere, set `DUBBING_STUDIO_RUNTIME` **before the first setup**.
 
-## Обновление и удаление
+## Updating and uninstalling
 
-Если проект получен через Git, запустите **`update.bat`**: он безопасно подтянет изменения и повторно применит установку. При ZIP скачайте новую версию и снова запустите `setup.bat`.
+Git installations can run **`update.bat`**. It pulls the latest commit and safely reapplies setup. ZIP users can download the latest archive and run `setup.bat` again.
 
-Чтобы удалить программу, сначала сохраните нужные результаты из `data/projects`, затем удалите папку Dubbing Studio и ярлык. Никакой отдельной системной службы программа не устанавливает. Git, Python и FFmpeg, установленные через winget, останутся, поскольку ими могут пользоваться другие приложения.
+To uninstall, save any exports you need from `data/projects`, then delete the Dubbing Studio folder and desktop shortcut. Dubbing Studio does not install a background service. Git, Python and FFmpeg remain installed because other applications may use them.
 
-## Диагностика и частые проблемы
+## Diagnostics and troubleshooting
 
-Запустите `doctor.ps1`. Строка `OK` должна стоять у FFmpeg, NVIDIA, четырёх Python-окружений и моделей.
+Run `doctor.ps1`. Every required runtime, model, FFmpeg and NVIDIA check should report `OK`.
 
-| Проблема | Что делать |
+| Problem | Resolution |
 |---|---|
-| SmartScreen блокирует BAT/PS1 | Нажмите «Подробнее → Выполнить в любом случае», только если скачали проект из доверенного репозитория. |
-| `winget` не найден | Установите «Установщик приложения» (App Installer) из Microsoft Store и повторите установку. |
-| Не найден NVIDIA | Установите свежий NVIDIA Studio Driver, перезагрузите ПК и проверьте команду `nvidia-smi`. |
-| Не хватает места | Освободите минимум 45 ГБ на диске, где находится `runtime`, либо задайте `DUBBING_STUDIO_RUNTIME`. |
-| Загрузка оборвалась | Просто снова запустите `setup.bat`; Hugging Face продолжит незавершённые файлы. |
-| Порт 8765 занят | Если студия уже открыта, скрипт откроет её вкладку. Иначе остановите программу, занявшую порт. |
-| Сильный акцент | Проверьте правильный целевой язык, выберите клон, исправьте пунктуацию и не ставьте максимальную выразительность. |
-| Голос меняется | Проверьте число говорящих и их метки; длинные чистые реплики дают лучшую голосовую опору. |
-| Щелчки или шум | Уменьшите фон, проверьте предупреждения QA; исходник с чистой речью даёт лучший результат. |
-| Реплика обрывается | Сократите перевод в редакторе. Автоадаптация ограничивает ускорение, чтобы речь не стала неестественной. |
-| Субтитры с неправильными символами | Используйте SRT, созданный программой (UTF-8 BOM), и современный видеоплеер. |
+| SmartScreen blocks BAT/PS1 | Select **More info → Run anyway** only if the project came from the trusted repository. |
+| `winget` is unavailable | Setup uses pinned direct installers for Python, Git and FFmpeg. |
+| NVIDIA is not detected | Install the latest NVIDIA Studio Driver, restart Windows and verify `nvidia-smi`. |
+| Not enough storage | Free at least 45 GB on the runtime drive or set `DUBBING_STUDIO_RUNTIME`. |
+| A download was interrupted | Run `setup.bat` again; Hugging Face continues incomplete files. |
+| Port 8765 is in use | If Dubbing Studio is already running, the script opens it. Otherwise stop the process using that port. |
+| The dub has a source accent | Verify the target language, preserve the original voice, correct punctuation and avoid maximum expression. |
+| Voice identity changes | Verify speaker count and assignments. Longer clean speech references produce more stable identities. |
+| Clicks or noise are audible | Reduce the background level and review QA warnings. Clean source dialogue produces the best result. |
+| A line is cut off | Shorten its translation. Automatic fitting limits speed so delivery remains natural. |
+| Caption characters are wrong | Use the generated UTF-8 BOM SRT and a modern video player. |
 
-Подробные логи конкретного проекта находятся в `data/projects/<ID>/logs`. В issue прикладывайте вывод `doctor.ps1` и нужный текстовый лог, но не приватные видео или образцы голоса.
+Project logs are stored in `data/projects/<ID>/logs`. When reporting an issue, attach `doctor.ps1` output and the relevant text log, never private video or voice samples.
 
-## Проверка интерфейса без моделей
+## UI development without models
 
-Разработчики могут включить демонстрационный режим:
+Use mock mode to test the interface and workflow without downloading AI models:
 
 ```powershell
 $env:DUBBING_STUDIO_MOCK='1'
 .\start.ps1
 ```
 
-Он проверяет загрузку, интерфейс и сборку тестового результата, но не оценивает реальное качество AI.
+Mock mode validates uploads, navigation and test exports. It does not measure real AI quality.
 
-## Разработка
-
-Лёгкое окружение без моделей:
+## Development
 
 ```powershell
 py -3.10 -m venv .venv
@@ -200,41 +197,42 @@ py -3.10 -m venv .venv
 node --check static\app.js
 ```
 
-API построен на FastAPI. Основные маршруты: `/api/health`, `/api/catalog`, `/api/projects`, анализ `/analyze`, рендер `/render`, WebSocket прогресса `/ws/projects/{id}`. Приложение обрабатывает одну тяжёлую GPU-задачу одновременно, чтобы модели не спорили за видеопамять.
+The API is built with FastAPI. Main routes include `/api/health`, `/api/catalog`, `/api/projects`, `/analyze`, `/render` and `/ws/projects/{id}`. One heavy GPU task runs at a time so translation, synthesis and conversion models do not compete for VRAM.
 
-Все внешние репозитории и модели закреплены на конкретных commit/revision в `setup.ps1` и `tools/download_models.py`. GitHub Actions не загружает тяжёлые модели: CI компилирует Python, запускает модульные тесты, проверяет JavaScript и синтаксис PowerShell.
+All external repositories and model weights are pinned to immutable revisions in `setup.ps1` and `tools/download_models.py`. GitHub Actions does not download large models; CI compiles Python, runs unit tests and validates JavaScript and PowerShell.
 
-## Приватность и ограничения
+## Privacy and limitations
 
-- После установки инференс локальный; модели загружаются из GitHub/Hugging Face только во время установки.
-- Данные хранятся без шифрования в `data/projects`. Любой пользователь Windows с доступом к этой папке сможет их прочитать.
-- Качество зависит от чистоты записи, перекрывающихся голосов, длительности реплик, языка и видеопамяти.
-- Программа не гарантирует идеальное совпадение личности, эмоций или губ и не выполняет lip-sync изображения.
-- Перед публикацией всегда прослушивайте итог целиком и соблюдайте права на видео, музыку, перевод и голос.
+- Inference is local after setup; GitHub and Hugging Face are contacted only to download dependencies and models.
+- Project data is not encrypted at rest. Any Windows user with access to `data/projects` can read it.
+- Quality depends on source cleanliness, overlapping speech, line duration, language and available VRAM.
+- The application does not guarantee perfect identity, emotion or lip synchronization.
+- Always review the complete result and respect rights to the video, music, translation and voice.
 
-## Лицензии и благодарности
+## Licenses and credits
 
-Код интерфейса и оркестрации распространяется по MIT License. Установщик отдельно загружает сторонние компоненты с их собственными условиями:
+The original interface and orchestration code use the MIT License. Setup downloads independent third-party components under their own terms:
 
 - Qwen3-TTS — Apache-2.0;
 - Tencent Hy-MT2 — Apache-2.0;
 - faster-whisper — MIT;
 - Demucs — MIT;
 - Seed-VC — GPL-3.0;
-- Linly-Dubbing — Apache-2.0, источник исследований и идей рабочего процесса, но не обязательный runtime-компонент.
+- Linly-Dubbing — Apache-2.0, used as a workflow research reference rather than a required runtime component;
+- Manrope and Fraunces — SIL Open Font License 1.1.
 
-Полный список ссылок, закреплённых версий и оговорок находится в [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Лицензия этого репозитория не заменяет лицензии стороннего кода и моделей.
+See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for source links and pinned revisions.
 
 ## FAQ
 
-**Нужен ли Codex после установки?** Нет. Весь рабочий процесс запускается из веб-интерфейса.
+**Is Codex required after installation?** No. The complete workflow runs from the local web interface.
 
-**Нужен ли интернет при каждом видео?** Нет. После успешной полной установки модели работают офлайн.
+**Is the internet required for every project?** No. Models work offline after complete setup.
 
-**Можно ли обрабатывать несколько роликов одновременно?** Проекты можно загрузить заранее, но GPU-очередь выполняет тяжёлые задачи последовательно.
+**Can multiple videos process at once?** Projects may be imported in advance, but heavy GPU work runs sequentially.
 
-**Можно ли выключить субтитры?** Да, полностью; можно также сохранить отдельный SRT без вшивания в видео.
+**Can captions be disabled?** Yes. You can also save SRT without burning captions into the video.
 
-**Что лучше: клон или голос из каталога?** Для сохранения личности и нескольких говорящих — клон. Для одного диктора, когда сходство не требуется, — каталог.
+**Which voice mode should I use?** Preserve original voices for identity and multi-speaker video. Use a catalog voice when identity is not required and the video has one speaker.
 
-**Почему первая установка такая большая?** Каждый этап специализирован: распознавание, перевод, нативное произношение, перенос тембра и отделение музыки используют разные локальные модели.
+**Why is setup so large?** Recognition, translation, native speech generation, voice conversion and music separation use specialized local models.

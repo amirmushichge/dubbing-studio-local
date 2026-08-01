@@ -37,11 +37,11 @@ function Find-Python310 {
 }
 
 function Install-WingetPackage([string]$Id, [string]$Name) {
-    if ($Plan) { Write-Host "[план] установить $Name ($Id)"; return }
-    Step "Установка $Name"
+    if ($Plan) { Write-Host "[plan] install $Name ($Id)"; return }
+    Step "Installing $Name"
     if (Get-Command winget -ErrorAction SilentlyContinue) {
         & winget install --exact --id $Id --accept-package-agreements --accept-source-agreements
-        if ($LASTEXITCODE -ne 0) { throw "winget не смог установить $Name ($Id)." }
+        if ($LASTEXITCODE -ne 0) { throw "winget could not install $Name ($Id)." }
     }
     else {
         $Bootstrap = Join-Path $RuntimeRoot 'bootstrap'
@@ -62,12 +62,12 @@ function Install-WingetPackage([string]$Id, [string]$Name) {
             Invoke-WebRequest 'https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip' -OutFile $Archive
             Expand-Archive -LiteralPath $Archive -DestinationPath $Destination -Force
             $ffmpeg = Get-ChildItem -LiteralPath $Destination -Recurse -Filter ffmpeg.exe | Select-Object -First 1
-            if (-not $ffmpeg) { throw 'FFmpeg загружен, но ffmpeg.exe не найден в архиве.' }
+            if (-not $ffmpeg) { throw 'FFmpeg was downloaded, but ffmpeg.exe is missing from the archive.' }
             $env:Path = "$($ffmpeg.Directory.FullName);$env:Path"
             return
         }
-        else { throw "Для $Id нет резервного установщика." }
-        if ($process.ExitCode -ne 0) { throw "Установщик $Name завершился с кодом $($process.ExitCode)." }
+        else { throw "No fallback installer is available for $Id." }
+        if ($process.ExitCode -ne 0) { throw "The $Name installer exited with code $($process.ExitCode)." }
     }
     Refresh-Path
 }
@@ -83,11 +83,11 @@ function Ensure-Venv([string]$Path, [string]$BasePython) {
         }
     }
     if (-not $healthy) {
-        if ($Plan) { Write-Host "[план] создать окружение $Path"; return $python }
+        if ($Plan) { Write-Host "[plan] create environment $Path"; return $python }
         if (Test-Path -LiteralPath $Path) {
             $backup = "$Path.broken-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
             Move-Item -LiteralPath $Path -Destination $backup
-            Write-Host "Повреждённое окружение сохранено: $backup" -ForegroundColor Yellow
+            Write-Host "The broken environment was preserved at: $backup" -ForegroundColor Yellow
         }
         & $BasePython -m venv $Path
     }
@@ -95,27 +95,27 @@ function Ensure-Venv([string]$Path, [string]$BasePython) {
 }
 
 function Pip([string]$Python, [string[]]$Arguments) {
-    if ($Plan) { Write-Host "[план] $Python -m pip $($Arguments -join ' ')"; return }
+    if ($Plan) { Write-Host "[plan] $Python -m pip $($Arguments -join ' ')"; return }
     & $Python -m pip @Arguments
-    if ($LASTEXITCODE -ne 0) { throw "pip завершился с ошибкой: $($Arguments -join ' ')" }
+    if ($LASTEXITCODE -ne 0) { throw "pip failed: $($Arguments -join ' ')" }
 }
 
 function Ensure-Repo([string]$Url, [string]$Path, [string]$Commit) {
     if (-not (Test-Path -LiteralPath (Join-Path $Path '.git'))) {
-        if ($Plan) { Write-Host "[план] git clone $Url -> $Path @ $Commit"; return }
+        if ($Plan) { Write-Host "[plan] git clone $Url -> $Path @ $Commit"; return }
         & git clone $Url $Path
-        if ($LASTEXITCODE -ne 0) { throw "Не удалось клонировать $Url" }
+        if ($LASTEXITCODE -ne 0) { throw "Could not clone $Url" }
     }
     if (-not $Plan) {
         & git -C $Path fetch --quiet origin $Commit
         & git -C $Path checkout --quiet --detach $Commit
-        if ($LASTEXITCODE -ne 0) { throw "Не удалось закрепить $Url на $Commit" }
+        if ($LASTEXITCODE -ne 0) { throw "Could not pin $Url to $Commit" }
     }
 }
 
 try {
-    Step 'Проверка системы'
-    if ($env:OS -ne 'Windows_NT') { throw 'Автоустановка сейчас поддерживает только Windows 10/11.' }
+    Step 'Checking the system'
+    if ($env:OS -ne 'Windows_NT') { throw 'Automatic setup currently supports Windows 10/11 only.' }
     New-Item -ItemType Directory -Force -Path $RuntimeRoot | Out-Null
     if (-not (Get-Command git -ErrorAction SilentlyContinue)) { Install-WingetPackage 'Git.Git' 'Git' }
     if (-not (Get-Command ffmpeg -ErrorAction SilentlyContinue)) { Install-WingetPackage 'Gyan.FFmpeg' 'FFmpeg' }
@@ -124,31 +124,31 @@ try {
         Install-WingetPackage 'Python.Python.3.10' 'Python 3.10'
         $BasePython = Join-Path $env:LOCALAPPDATA 'Programs\Python\Python310\python.exe'
     }
-    if (-not $Plan -and -not (Test-Path -LiteralPath $BasePython)) { throw 'Python 3.10 установлен, но не найден. Перезапустите setup.bat.' }
+    if (-not $Plan -and -not (Test-Path -LiteralPath $BasePython)) { throw 'Python 3.10 was installed but could not be found. Restart setup.bat.' }
     $portableFfmpeg = Get-ChildItem -LiteralPath (Join-Path $RuntimeRoot 'tools\ffmpeg') -Recurse -Filter ffmpeg.exe -ErrorAction SilentlyContinue | Select-Object -First 1
     if ($portableFfmpeg) { $env:Path = "$($portableFfmpeg.Directory.FullName);$env:Path" }
     if (-not (Get-Command nvidia-smi -ErrorAction SilentlyContinue)) {
-        throw 'Не найден драйвер NVIDIA. Установите свежий NVIDIA Studio Driver и повторите setup.bat.'
+        throw 'No NVIDIA driver was found. Install the latest NVIDIA Studio Driver and run setup.bat again.'
     }
     $drive = Get-PSDrive -Name ([IO.Path]::GetPathRoot($RuntimeRoot).TrimEnd(':\'))
     $freeGb = [math]::Round($drive.Free / 1GB, 1)
-    if ($freeGb -lt 45 -and -not $SkipModels) { throw "На диске только $freeGb ГБ свободно. Для установки нужно не менее 45 ГБ." }
+    if ($freeGb -lt 45 -and -not $SkipModels) { throw "Only $freeGb GB is free on this drive. Setup requires at least 45 GB." }
 
     $AppPython = Ensure-Venv (Join-Path $ProjectRoot '.venv') $BasePython
-    Step 'Установка веб-приложения'
+    Step 'Installing the web application'
     Pip $AppPython @('install', '--upgrade', 'pip', 'wheel')
     Pip $AppPython @('install', '-r', (Join-Path $ProjectRoot 'requirements.txt'))
 
     $AsrRoot = Join-Path $RuntimeRoot 'asr'
     New-Item -ItemType Directory -Force -Path $AsrRoot | Out-Null
     $AsrPython = Ensure-Venv (Join-Path $AsrRoot '.venv') $BasePython
-    Step 'Установка распознавания речи и разделения аудио'
+    Step 'Installing speech recognition and audio separation'
     Pip $AsrPython @('install', '--upgrade', 'pip', 'wheel')
     Pip $AsrPython @('install', 'torch==2.7.1', 'torchaudio==2.7.1', '--index-url', 'https://download.pytorch.org/whl/cu128')
     Pip $AsrPython @('install', '-r', (Join-Path $ProjectRoot 'requirements\asr.txt'))
 
     $QwenRoot = Join-Path $RuntimeRoot 'qwen3-tts'
-    Step 'Установка Qwen3-TTS'
+    Step 'Installing Qwen3-TTS'
     Ensure-Repo 'https://github.com/QwenLM/Qwen3-TTS.git' $QwenRoot '022e286b98fbec7e1e916cb940cdf532cd9f488e'
     $QwenPython = Ensure-Venv (Join-Path $QwenRoot '.venv') $BasePython
     Pip $QwenPython @('install', '--upgrade', 'pip', 'wheel')
@@ -158,13 +158,13 @@ try {
     $HyRoot = Join-Path $RuntimeRoot 'hymt'
     New-Item -ItemType Directory -Force -Path $HyRoot | Out-Null
     $HyPython = Ensure-Venv (Join-Path $HyRoot '.venv') $BasePython
-    Step 'Установка локального переводчика Hy-MT2'
+    Step 'Installing the local Hy-MT2 translator'
     Pip $HyPython @('install', '--upgrade', 'pip', 'wheel')
     Pip $HyPython @('install', 'torch==2.7.1', '--index-url', 'https://download.pytorch.org/whl/cu128')
     Pip $HyPython @('install', '-r', (Join-Path $ProjectRoot 'requirements\hymt.txt'))
 
     $SeedRoot = Join-Path $RuntimeRoot 'seed-vc'
-    Step 'Установка Seed-VC и инструментов контроля голоса'
+    Step 'Installing Seed-VC and voice quality tools'
     Ensure-Repo 'https://github.com/Plachtaa/seed-vc.git' $SeedRoot '51383efd921027683c89e5348211d93ff12ac2a8'
     $SeedPython = Ensure-Venv (Join-Path $SeedRoot '.venv') $BasePython
     Pip $SeedPython @('install', '--upgrade', 'pip', 'wheel')
@@ -172,10 +172,10 @@ try {
     Pip $SeedPython @('install', '-r', (Join-Path $ProjectRoot 'requirements\seedvc-extra.txt'))
 
     if (-not $SkipModels) {
-        Step 'Загрузка AI-моделей (примерно 30 ГБ, загрузку можно безопасно повторить)'
+        Step 'Downloading AI models (about 30 GB; interrupted downloads can resume safely)'
         if (-not $Plan) { & $AppPython (Join-Path $ProjectRoot 'tools\download_models.py') --runtime $RuntimeRoot }
-        else { Write-Host '[план] скачать закреплённые версии моделей Hugging Face' }
-        Step 'Подготовка модели Demucs'
+        else { Write-Host '[plan] download pinned Hugging Face model revisions' }
+        Step 'Preparing the Demucs model'
         if (-not $Plan) {
             $env:TORCH_HOME = Join-Path $AsrRoot 'models\torch'
             & $AsrPython (Join-Path $ProjectRoot 'tools\prefetch_demucs.py')
@@ -185,17 +185,18 @@ try {
     if (-not $Plan) {
         $state = @{ installed_at = (Get-Date).ToString('o'); runtime = $RuntimeRoot; version = '0.1.0' } | ConvertTo-Json
         Set-Content -LiteralPath (Join-Path $RuntimeRoot 'install-state.json') -Value $state -Encoding UTF8
-        Step 'Финальная диагностика'
+        Step 'Running final diagnostics'
         & (Join-Path $ProjectRoot 'doctor.ps1')
         if (-not $SkipShortcut) { & (Join-Path $ProjectRoot 'create-shortcut.ps1') }
     }
-    if ($Plan) { Write-Host "`nПлан установки проверен успешно; ничего не загружалось." -ForegroundColor Green }
-    else { Write-Host "`nDubbing Studio установлен успешно." -ForegroundColor Green }
+    if ($Plan) { Write-Host "`nSetup plan validated successfully; nothing was downloaded." -ForegroundColor Green }
+    else { Write-Host "`nDubbing Studio installed successfully." -ForegroundColor Green }
 }
 finally {
     try { Stop-Transcript | Out-Null } catch {}
-    Write-Host "Журнал: $LogFile" -ForegroundColor DarkGray
+    Write-Host "Log: $LogFile" -ForegroundColor DarkGray
 }
+
 
 
 

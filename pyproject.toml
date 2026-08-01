@@ -1,7 +1,7 @@
 [project]
 name = "local-dubbing-studio"
 version = "0.1.0"
-description = "Полностью локальный профессиональный видеодубляж с переводом и сохранением голосов"
+description = "Fully local professional video translation and dubbing with voice preservation"
 requires-python = ">=3.10,<3.11"
 license = { text = "MIT" }
 

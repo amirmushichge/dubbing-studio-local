@@ -1,27 +1,27 @@
-# План продукта
+# Product plan
 
-## В MVP
+## Included in the MVP
 
-- локальная установка и запуск одним файлом;
-- проекты, очередь и восстановление состояния;
-- загрузка, метаданные и превью;
-- анализ одного или нескольких говорящих;
-- редактор реплик, имён и назначений;
-- 10 языков вывода;
-- original voice clone и 4 каталожных голоса;
-- on-demand предпрослушивание с кэшем;
-- 6 subtitle presets, отключение и отдельный SRT;
-- фон, выразительность, три уровня качества;
-- финальный просмотр, скачивание и QA-отчёт.
+- one-command local setup and launch;
+- persistent projects, a GPU queue and recoverable state;
+- upload, metadata and thumbnail generation;
+- one- or multi-speaker analysis;
+- transcript, speaker-name and assignment editing;
+- ten output languages;
+- original voice cloning and four catalog voices;
+- cached on-demand voice previews;
+- six caption presets, full disable and separate SRT;
+- background level, expression and three quality levels;
+- final playback, downloads and QA report;
+- English AmirStyle interface for desktop and mobile.
 
-## После MVP
+## After the MVP
 
-1. Визуальный редактор таймлайна и перетаскивание границ реплик.
-2. Глоссарии проектов, импорт CSV и закрепление перевода имён.
-3. Пакетная очередь папки видео.
-4. Экспорт нескольких языков из одного анализа.
-5. Локальная модель артикуляции для боснийского/сербохорватского.
-6. Предварительная генерация выбранной сцены до полного рендера.
-7. Автоматические версии и сравнение A/B голосов.
-8. Упаковка в Tauri/Windows installer после стабилизации pipeline.
-
+1. Visual timeline editing and draggable line boundaries.
+2. Project glossaries, CSV import and locked name translation.
+3. Batch processing for video folders.
+4. Multiple-language export from one analysis.
+5. A validated local articulation model for Bosnian / Serbo-Croatian.
+6. Selected-scene preview before full rendering.
+7. Automatic versions and A/B voice comparison.
+8. Tauri / native Windows packaging after pipeline stabilization.

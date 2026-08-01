@@ -53,7 +53,7 @@ def projects() -> list[dict]:
 async def upload_project(video: UploadFile = File(...)) -> dict:
     suffix = Path(video.filename or "video.mp4").suffix.lower()
     if suffix not in VIDEO_SUFFIXES:
-        raise HTTPException(400, "Поддерживаются MP4, MOV, MKV, WebM и M4V")
+        raise HTTPException(400, "Supported formats: MP4, MOV, MKV, WebM and M4V.")
     project = create_project(video.filename or "video.mp4")
     folder = project_dir(project["id"])
     target = folder / "input" / f"source{suffix}"
@@ -64,7 +64,7 @@ async def upload_project(video: UploadFile = File(...)) -> dict:
             if size > config.MAX_UPLOAD_BYTES:
                 output.close()
                 target.unlink(missing_ok=True)
-                raise HTTPException(413, "Файл превышает локальный лимит")
+                raise HTTPException(413, "The file exceeds the local upload limit.")
             output.write(chunk)
     try:
         media = probe(target)
@@ -72,7 +72,7 @@ async def upload_project(video: UploadFile = File(...)) -> dict:
         make_thumbnail(target, thumbnail, media["duration"])
     except Exception as exc:
         shutil.rmtree(folder, ignore_errors=True)
-        raise HTTPException(400, f"Не удалось прочитать видео: {exc}") from exc
+        raise HTTPException(400, f"Could not read the video: {exc}") from exc
     project = load_project(project["id"])
     project["media"] = media
     project["input"] = str(target)
@@ -86,16 +86,16 @@ def get_project(project_id: str) -> dict:
     try:
         return load_project(project_id)
     except FileNotFoundError as exc:
-        raise HTTPException(404, "Проект не найден") from exc
+        raise HTTPException(404, "Project not found.") from exc
 
 
 @app.post("/api/projects/{project_id}/analyze")
 def start_analysis(project_id: str, request: AnalyzeRequest) -> dict:
     project = get_project(project_id)
     if project["status"] in {"analyzing", "rendering"}:
-        raise HTTPException(409, "Проект уже обрабатывается")
+        raise HTTPException(409, "This project is already processing.")
     project["status"] = "queued"
-    project["stage"] = "В очереди на анализ"
+    project["stage"] = "Queued for analysis"
     save_project(project)
     jobs.submit(project_id, analyze, request.model_dump())
     return project
@@ -105,7 +105,7 @@ def start_analysis(project_id: str, request: AnalyzeRequest) -> dict:
 def patch_transcript(project_id: str, patch: SegmentPatch) -> dict:
     project = get_project(project_id)
     if project["status"] not in {"review", "failed", "complete"}:
-        raise HTTPException(409, "Текст нельзя менять во время обработки")
+        raise HTTPException(409, "The transcript cannot be changed while the project is processing.")
     project["analysis"]["segments"] = patch.segments
     if patch.speakers is not None:
         project["analysis"]["speakers"] = patch.speakers
@@ -117,11 +117,11 @@ def patch_transcript(project_id: str, patch: SegmentPatch) -> dict:
 def start_render(project_id: str, request: RenderRequest) -> dict:
     project = get_project(project_id)
     if project["status"] in {"analyzing", "rendering", "queued"}:
-        raise HTTPException(409, "Проект уже обрабатывается")
+        raise HTTPException(409, "This project is already processing.")
     if not project["analysis"].get("segments"):
-        raise HTTPException(400, "Сначала выполните анализ")
+        raise HTTPException(400, "Run the analysis first.")
     project["status"] = "queued"
-    project["stage"] = "В очереди на рендер"
+    project["stage"] = "Queued for rendering"
     save_project(project)
     jobs.submit(project_id, render, request.model_dump())
     return project
@@ -134,7 +134,7 @@ def voice_preview(request: PreviewRequest) -> dict:
     target = config.PREVIEWS_ROOT / request.language / f"{request.voice_id}.wav"
     if not target.exists():
         if jobs.active or jobs.queue.qsize():
-            raise HTTPException(409, "GPU занят дубляжом. Предпрослушивание можно создать после завершения текущей задачи.")
+            raise HTTPException(409, "The GPU is busy with a dub. Generate the preview after the current task finishes.")
         payload = {"output": str(target), "qwen_root": str(config.QWEN_ROOT), "sample_text": language["sample"], "tts_language": language["tts"], "voice_description": persona["description"]}
         request_path = target.with_suffix(".json")
         request_path.parent.mkdir(parents=True, exist_ok=True)

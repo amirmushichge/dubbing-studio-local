@@ -36,7 +36,7 @@ def create_project(filename: str) -> dict[str, Any]:
         "name": Path(filename).stem,
         "filename": filename,
         "status": "uploaded",
-        "stage": "Загружено",
+        "stage": "Uploaded",
         "progress": 0,
         "created_at": stamp,
         "updated_at": stamp,
@@ -91,4 +91,3 @@ def list_projects() -> list[dict[str, Any]]:
         except (OSError, json.JSONDecodeError):
             continue
     return sorted(projects, key=lambda item: item.get("updated_at", ""), reverse=True)
-

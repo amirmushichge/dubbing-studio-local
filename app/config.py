@@ -55,32 +55,32 @@ MAX_UPLOAD_BYTES = int(os.environ.get("DUBBING_STUDIO_MAX_UPLOAD", 12 * 1024**3)
 MOCK_MODE = os.environ.get("DUBBING_STUDIO_MOCK", "0") == "1"
 
 LANGUAGES = [
-    {"id": "zh", "label": "Китайский, упрощённый", "tts": "Chinese", "asr": "zh", "hymt": "Chinese", "sample": "你好！这是所选声音的示例。"},
-    {"id": "en", "label": "Английский", "tts": "English", "asr": "en", "hymt": "English", "sample": "Hello! This is a preview of the selected voice."},
-    {"id": "ru", "label": "Русский", "tts": "Russian", "asr": "ru", "hymt": "Russian", "sample": "Здравствуйте! Это пример выбранного голоса."},
-    {"id": "de", "label": "Немецкий", "tts": "German", "asr": "de", "hymt": "German", "sample": "Hallo! Dies ist eine Vorschau der ausgewählten Stimme."},
-    {"id": "fr", "label": "Французский", "tts": "French", "asr": "fr", "hymt": "French", "sample": "Bonjour ! Voici un aperçu de la voix sélectionnée."},
-    {"id": "es", "label": "Испанский", "tts": "Spanish", "asr": "es", "hymt": "Spanish", "sample": "¡Hola! Esta es una muestra de la voz seleccionada."},
-    {"id": "it", "label": "Итальянский", "tts": "Italian", "asr": "it", "hymt": "Italian", "sample": "Ciao! Questa è un'anteprima della voce selezionata."},
-    {"id": "pt", "label": "Португальский", "tts": "Portuguese", "asr": "pt", "hymt": "Portuguese", "sample": "Olá! Esta é uma amostra da voz selecionada."},
-    {"id": "ja", "label": "Японский", "tts": "Japanese", "asr": "ja", "hymt": "Japanese", "sample": "こんにちは。選択した音声のサンプルです。"},
-    {"id": "ko", "label": "Корейский", "tts": "Korean", "asr": "ko", "hymt": "Korean", "sample": "안녕하세요. 선택한 목소리의 예시입니다."},
+    {"id": "zh", "label": "Chinese · Simplified", "tts": "Chinese", "asr": "zh", "hymt": "Chinese", "sample": "你好！这是所选声音的示例。"},
+    {"id": "en", "label": "English", "tts": "English", "asr": "en", "hymt": "English", "sample": "Hello! This is a preview of the selected voice."},
+    {"id": "ru", "label": "Russian", "tts": "Russian", "asr": "ru", "hymt": "Russian", "sample": "Здравствуйте! Это пример выбранного голоса."},
+    {"id": "de", "label": "German", "tts": "German", "asr": "de", "hymt": "German", "sample": "Hallo! Dies ist eine Vorschau der ausgewählten Stimme."},
+    {"id": "fr", "label": "French", "tts": "French", "asr": "fr", "hymt": "French", "sample": "Bonjour ! Voici un aperçu de la voix sélectionnée."},
+    {"id": "es", "label": "Spanish", "tts": "Spanish", "asr": "es", "hymt": "Spanish", "sample": "¡Hola! Esta es una muestra de la voz seleccionada."},
+    {"id": "it", "label": "Italian", "tts": "Italian", "asr": "it", "hymt": "Italian", "sample": "Ciao! Questa è un'anteprima della voce selezionata."},
+    {"id": "pt", "label": "Portuguese", "tts": "Portuguese", "asr": "pt", "hymt": "Portuguese", "sample": "Olá! Esta é uma amostra da voz selecionada."},
+    {"id": "ja", "label": "Japanese", "tts": "Japanese", "asr": "ja", "hymt": "Japanese", "sample": "こんにちは。選択した音声のサンプルです。"},
+    {"id": "ko", "label": "Korean", "tts": "Korean", "asr": "ko", "hymt": "Korean", "sample": "안녕하세요. 선택한 목소리의 예시입니다."},
 ]
 
 VOICE_PERSONAS = [
-    {"id": "warm_female", "label": "Тёплый женский", "icon": "warm", "description": "A warm natural adult female voice, friendly and conversational, restrained emotion, clean studio recording."},
-    {"id": "clear_male", "label": "Чистый мужской", "icon": "clear", "description": "A clear natural adult male voice, confident but not commercial, conversational cadence, clean studio recording."},
-    {"id": "soft_young", "label": "Молодой мягкий", "icon": "young", "description": "A soft youthful voice, lively and sincere, natural conversational rhythm, clean studio recording."},
-    {"id": "documentary", "label": "Документальный", "icon": "documentary", "description": "A calm mature documentary narrator, articulate and composed, natural pauses, clean studio recording."},
+    {"id": "warm_female", "label": "Warm female", "icon": "warm", "description": "A warm natural adult female voice, friendly and conversational, restrained emotion, clean studio recording."},
+    {"id": "clear_male", "label": "Clear male", "icon": "clear", "description": "A clear natural adult male voice, confident but not commercial, conversational cadence, clean studio recording."},
+    {"id": "soft_young", "label": "Soft youthful", "icon": "young", "description": "A soft youthful voice, lively and sincere, natural conversational rhythm, clean studio recording."},
+    {"id": "documentary", "label": "Documentary", "icon": "documentary", "description": "A calm mature documentary narrator, articulate and composed, natural pauses, clean studio recording."},
 ]
 
 SUBTITLE_STYLES = [
-    {"id": "clean", "label": "Чистый", "description": "Белый текст с тонкой обводкой", "force_style": "FontName=Arial,FontSize=16,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=1.6,Shadow=0,Alignment=2,MarginV=55"},
-    {"id": "cinema", "label": "Кино", "description": "Мягкий жёлто-белый текст", "force_style": "FontName=Arial,FontSize=17,PrimaryColour=&H00F2F5FF,OutlineColour=&H000B0D12,BorderStyle=1,Outline=2.2,Shadow=0.5,Alignment=2,MarginV=58"},
-    {"id": "social", "label": "Соцсети", "description": "Крупный жирный текст", "force_style": "FontName=Arial,FontSize=22,Bold=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=3,Shadow=0,Alignment=2,MarginV=72"},
-    {"id": "boxed", "label": "Плашка", "description": "Текст на полупрозрачном фоне", "force_style": "FontName=Arial,FontSize=17,PrimaryColour=&H00FFFFFF,BackColour=&H90000000,OutlineColour=&H90000000,BorderStyle=3,Outline=6,Shadow=0,Alignment=2,MarginV=55"},
-    {"id": "accent", "label": "Акцент", "description": "Жёлтый текст для коротких роликов", "force_style": "FontName=Arial,FontSize=20,Bold=1,PrimaryColour=&H0000E8FF,OutlineColour=&H00101010,BorderStyle=1,Outline=2.5,Shadow=0,Alignment=2,MarginV=65"},
-    {"id": "minimal", "label": "Минимал", "description": "Небольшой спокойный текст", "force_style": "FontName=Arial,FontSize=14,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=1.2,Shadow=0,Alignment=2,MarginV=42"},
+    {"id": "clean", "label": "Clean", "description": "White type · fine outline", "force_style": "FontName=Arial,FontSize=16,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=1.6,Shadow=0,Alignment=2,MarginV=55"},
+    {"id": "cinema", "label": "Cinema", "description": "Soft warm-white type", "force_style": "FontName=Arial,FontSize=17,PrimaryColour=&H00F2F5FF,OutlineColour=&H000B0D12,BorderStyle=1,Outline=2.2,Shadow=0.5,Alignment=2,MarginV=58"},
+    {"id": "social", "label": "Social", "description": "Large bold captions", "force_style": "FontName=Arial,FontSize=22,Bold=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=3,Shadow=0,Alignment=2,MarginV=72"},
+    {"id": "boxed", "label": "Boxed", "description": "Type on a soft backdrop", "force_style": "FontName=Arial,FontSize=17,PrimaryColour=&H00FFFFFF,BackColour=&H90000000,OutlineColour=&H90000000,BorderStyle=3,Outline=6,Shadow=0,Alignment=2,MarginV=55"},
+    {"id": "accent", "label": "Editorial", "description": "Italic editorial accent", "force_style": "FontName=Arial,FontSize=20,Bold=1,PrimaryColour=&H0000E8FF,OutlineColour=&H00101010,BorderStyle=1,Outline=2.5,Shadow=0,Alignment=2,MarginV=65"},
+    {"id": "minimal", "label": "Minimal", "description": "Small restrained captions", "force_style": "FontName=Arial,FontSize=14,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=1.2,Shadow=0,Alignment=2,MarginV=42"},
 ]
 
 for path in (DATA_ROOT, PROJECTS_ROOT, CACHE_ROOT, PREVIEWS_ROOT):

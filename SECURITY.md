@@ -1,5 +1,5 @@
-# Безопасность
+# Security
 
-Не прикладывайте к публичным issue исходные видео, образцы голосов, токены и персональные данные. Для сообщения об уязвимости используйте приватный канал GitHub Security Advisories репозитория.
+Never attach source videos, voice samples, tokens or personal data to a public issue. Report vulnerabilities privately through GitHub Security Advisories.
 
-Приложение слушает только `127.0.0.1`; не меняйте адрес на `0.0.0.0`, если не понимаете последствия. Голос клонируйте только с разрешения его владельца и не используйте результат для обмана, выдачи себя за другого человека или обхода проверки личности.
+The application listens on `127.0.0.1` only. Do not change it to `0.0.0.0` unless you understand the network exposure. Clone a voice only with its owner’s permission, and never use the result for deception, impersonation, fraud or identity-verification bypass.
