@@ -1,0 +1,6 @@
+.speaker-card input,
+.speaker-card select {
+  margin-top: 9px;
+  padding: 8px;
+  font-size: 11px;
+}

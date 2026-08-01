@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  smoke-test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install lightweight dependencies
+        run: pip install -r requirements.txt -r requirements-dev.txt
+      - name: Compile Python
+        run: python -m compileall -q app workers tools tests
+      - name: Run tests
+        run: pytest -q
+      - name: Check browser JavaScript
+        run: node --check static/app.js
+      - name: Parse PowerShell scripts
+        shell: pwsh
+        run: |
+          $errors = @()
+          Get-ChildItem -Filter *.ps1 | ForEach-Object {
+            [void][System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$null, [ref]$errors)
+          }
+          if ($errors.Count) { $errors | Format-List; exit 1 }

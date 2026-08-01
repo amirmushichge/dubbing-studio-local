@@ -1,0 +1,25 @@
+name: Ошибка
+description: Сообщить о воспроизводимой проблеме
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: checkboxes
+    attributes:
+      label: Перед отправкой
+      options:
+        - label: Я запустил doctor.ps1 и повторил setup.bat
+          required: true
+        - label: Я имею право использовать голоса из видео
+          required: true
+  - type: textarea
+    attributes:
+      label: Что произошло?
+      description: Опишите ожидаемый и фактический результат.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Диагностика
+      description: Приложите вывод doctor.ps1 и соответствующий лог из data/projects/.../logs. Не публикуйте приватное видео.
+    validations:
+      required: true

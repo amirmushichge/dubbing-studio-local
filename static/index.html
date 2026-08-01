@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dubbing Studio</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="stylesheet" href="/static/speaker.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-mark">D</span><div><strong>Dubbing Studio</strong><small>Local voice lab</small></div></div>
+      <button class="primary wide" id="newProjectButton"><span>＋</span> Новое видео</button>
+      <div class="side-label">Проекты</div>
+      <div id="projectList" class="project-list"></div>
+      <div class="system-card" id="healthCard"><span class="status-dot"></span><div><strong>Проверяем систему</strong><small>Локальные модели</small></div></div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div><span class="eyebrow">ЛОКАЛЬНЫЙ ДУБЛЯЖ</span><h1 id="pageTitle">Новый проект</h1></div>
+        <div class="privacy"><span>●</span> Интернет не используется</div>
+      </header>
+
+      <section id="uploadView" class="view">
+        <div class="hero-copy"><h2>Видео говорит на любом языке.<br><em>Тем же голосом.</em></h2><p>Загрузите ролик — приложение отделит речь, распознает говорящих, переведёт и соберёт профессиональный дубляж.</p></div>
+        <label class="upload-zone" id="uploadZone">
+          <input type="file" id="videoInput" accept="video/mp4,video/quicktime,video/x-matroska,video/webm" hidden>
+          <span class="upload-icon">↥</span><strong>Перетащите видео сюда</strong><span>или нажмите, чтобы выбрать файл</span><small>MP4 · MOV · MKV · WEBM, до 12 ГБ</small>
+        </label>
+        <div class="feature-strip">
+          <div><span>01</span><strong>Только локально</strong><small>Файлы не покидают компьютер</small></div>
+          <div><span>02</span><strong>Сохранение голоса</strong><small>Отдельный профиль каждого человека</small></div>
+          <div><span>03</span><strong>Контроль качества</strong><small>Текст, стыки, сходство и громкость</small></div>
+        </div>
+      </section>
+
+      <section id="studioView" class="view hidden">
+        <div class="project-hero">
+          <div class="video-card"><img id="thumbnail" alt="Кадр видео"><div class="duration" id="durationBadge"></div></div>
+          <div class="project-summary"><span class="pill" id="projectStatus">Загружено</span><h2 id="projectName"></h2><div class="meta" id="projectMeta"></div><div class="progress-wrap"><div class="progress-label"><span id="stageLabel">Готово к анализу</span><b id="progressLabel">0%</b></div><div class="progress-track"><i id="progressBar"></i></div></div></div>
+        </div>
+
+        <nav class="steps" id="steps">
+          <button data-step="analysis" class="active"><span>1</span> Анализ</button>
+          <button data-step="transcript"><span>2</span> Текст и голоса</button>
+          <button data-step="delivery"><span>3</span> Дубляж</button>
+          <button data-step="result"><span>4</span> Результат</button>
+        </nav>
+
+        <div id="analysisPanel" class="panel-grid step-panel">
+          <article class="panel"><div class="panel-head"><div><span class="kicker">ИСТОЧНИК</span><h3>Что анализируем</h3></div></div><label>Язык оригинала<select id="sourceLanguage"><option value="auto">Определить автоматически</option></select></label><label>Количество говорящих<select id="speakerCount"><option value="auto">Определить автоматически</option><option value="1">1 говорящий</option><option value="2">2 говорящих</option><option value="3">3 говорящих</option><option value="4">4 говорящих</option></select></label><div class="note">При нескольких голосах приложение создаст отдельный постоянный профиль для каждого человека.</div></article>
+          <article class="panel process-panel"><span class="kicker">ПРОЦЕСС</span><h3>Локальная обработка</h3><ul class="process-list"><li><i>✓</i> Извлечь звук из видео</li><li><i>✓</i> Отделить речь от музыки</li><li><i>✓</i> Распознать текст и паузы</li><li><i>✓</i> Разделить говорящих</li></ul><button class="primary wide" id="analyzeButton">Начать анализ</button></article>
+        </div>
+
+        <div id="transcriptPanel" class="step-panel hidden">
+          <div class="section-title"><div><span class="kicker">ПРОВЕРКА</span><h3>Реплики и говорящие</h3><p>Исправьте имена, пунктуацию и назначение голоса до перевода.</p></div><button class="secondary" id="saveTranscript">Сохранить правки</button></div>
+          <div class="speaker-row" id="speakerCards"></div>
+          <div class="transcript-table"><div class="transcript-header"><span>Время</span><span>Говорящий</span><span>Исходный текст</span></div><div id="segmentRows"></div></div>
+          <div class="panel-actions"><button class="primary" data-next="delivery">Настроить дубляж →</button></div>
+        </div>
+
+        <div id="deliveryPanel" class="step-panel hidden">
+          <div class="settings-grid">
+            <article class="panel span-2"><span class="kicker">ЯЗЫК</span><h3>Язык перевода</h3><div id="targetLanguages" class="language-grid"></div></article>
+            <article class="panel span-2"><span class="kicker">ГОЛОС</span><h3>Как должен звучать перевод</h3><div class="mode-grid"><label class="choice-card selected"><input type="radio" name="voiceMode" value="clone" checked><span class="choice-icon">◎</span><strong>Сохранить оригинал</strong><small>Тембр каждого человека, нативное произношение</small></label><label class="choice-card" id="catalogModeCard"><input type="radio" name="voiceMode" value="catalog"><span class="choice-icon">◉</span><strong>Выбрать голос</strong><small>Для ролика с одним говорящим</small></label></div><div id="voiceCatalog" class="voice-grid hidden"></div></article>
+            <article class="panel span-2"><div class="subtitle-heading"><div><span class="kicker">СУБТИТРЫ</span><h3>Оформление</h3></div><label class="switch"><input id="subtitleEnabled" type="checkbox" checked><span></span><b>Включены</b></label></div><div id="subtitleStyles" class="subtitle-grid"></div><label class="check-row"><input id="burnSubtitles" type="checkbox" checked> Встроить субтитры в изображение <small>SRT всё равно сохранится отдельно</small></label></article>
+            <article class="panel"><span class="kicker">МИКС</span><h3>Фоновый звук</h3><label class="range-label"><span>Громкость музыки и окружения</span><b id="backgroundValue">42%</b></label><input id="backgroundVolume" type="range" min="0" max="100" value="42"></article>
+            <article class="panel"><span class="kicker">ПОДАЧА</span><h3>Выразительность</h3><label class="range-label"><span>Спокойно — выразительно</span><b id="expressionValue">50%</b></label><input id="expression" type="range" min="0" max="100" value="50"><label>Качество<select id="quality"><option value="high">Высокое</option><option value="balanced">Сбалансированное</option><option value="draft">Черновик</option></select></label></article>
+          </div>
+          <div class="render-bar"><div><strong>Все этапы выполняются локально</strong><small>Приложение сохранит промежуточные файлы и отчёт проверки.</small></div><button class="primary" id="renderButton">Создать дубляж</button></div>
+        </div>
+
+        <div id="resultPanel" class="step-panel hidden"><div class="result-grid"><article class="panel result-player"><video id="resultVideo" controls></video></article><article class="panel"><span class="success-mark">✓</span><h3>Видео готово</h3><p id="qualitySummary"></p><div class="quality-list" id="qualityList"></div><a class="primary wide button-link" id="downloadVideo" download>Скачать видео</a><a class="secondary wide button-link" id="downloadSrt" download>Скачать SRT</a></article></div></div>
+
+        <details class="log-panel"><summary>Журнал проекта <span id="eventCount">0</span></summary><div id="eventLog"></div></details>
+      </section>
+    </main>
+  </div>
+  <div class="toast" id="toast"></div>
+  <script src="/static/app.js"></script>
+</body>
+</html>

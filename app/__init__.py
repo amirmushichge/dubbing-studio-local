@@ -1,0 +1,2 @@
+"""Dubbing Studio local application."""
+
