@@ -90,7 +90,7 @@ SUBTITLE_STYLES = [
     {"id": "cinema", "label": "Cinema", "description": "Soft warm-white type", "force_style": "FontName=Arial,FontSize=17,PrimaryColour=&H00F2F5FF,OutlineColour=&H000B0D12,BorderStyle=1,Outline=2.2,Shadow=0.5,Alignment=2,MarginV=58"},
     {"id": "social", "label": "Social", "description": "Large bold captions", "force_style": "FontName=Arial,FontSize=22,Bold=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=3,Shadow=0,Alignment=2,MarginV=72"},
     {"id": "boxed", "label": "Boxed", "description": "Type on a soft backdrop", "force_style": "FontName=Arial,FontSize=17,PrimaryColour=&H00FFFFFF,BackColour=&H90000000,OutlineColour=&H90000000,BorderStyle=3,Outline=6,Shadow=0,Alignment=2,MarginV=55"},
-    {"id": "accent", "label": "Editorial", "description": "Italic editorial accent", "force_style": "FontName=Arial,FontSize=20,Bold=1,PrimaryColour=&H0000E8FF,OutlineColour=&H00101010,BorderStyle=1,Outline=2.5,Shadow=0,Alignment=2,MarginV=65"},
+    {"id": "accent", "label": "Editorial", "description": "Strong editorial accent", "force_style": "FontName=Arial,FontSize=20,Bold=1,PrimaryColour=&H0000E8FF,OutlineColour=&H00101010,BorderStyle=1,Outline=2.5,Shadow=0,Alignment=2,MarginV=65"},
     {"id": "minimal", "label": "Minimal", "description": "Small restrained captions", "force_style": "FontName=Arial,FontSize=14,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=1.2,Shadow=0,Alignment=2,MarginV=42"},
 ]
 

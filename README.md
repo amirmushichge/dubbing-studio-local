@@ -219,7 +219,7 @@ The original interface and orchestration code use the MIT License. Setup downloa
 - Demucs — MIT;
 - Seed-VC — GPL-3.0;
 - Linly-Dubbing — Apache-2.0, used as a workflow research reference rather than a required runtime component;
-- Manrope and Fraunces — SIL Open Font License 1.1.
+- Manrope — SIL Open Font License 1.1.
 
 See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for source links and pinned revisions.
 

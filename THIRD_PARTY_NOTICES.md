@@ -17,6 +17,5 @@ This repository contains original orchestration and UI code under the MIT Licens
 | Demucs | https://github.com/facebookresearch/demucs | installed from PyPI | MIT |
 | Linly-Dubbing | https://github.com/Kedreamix/Linly-Dubbing | research reference `5677191ee544afae8250cee8e801c03839bcba24` | Apache-2.0 |
 | Manrope | https://github.com/google/fonts/tree/main/ofl/manrope | bundled UI font | SIL Open Font License 1.1 |
-| Fraunces | https://github.com/google/fonts/tree/main/ofl/fraunces | bundled UI font | SIL Open Font License 1.1 |
 
 No third-party model weights are committed to this repository. Review the current upstream model card and acceptable-use terms before distribution or commercial use. Seed-VC is GPL-3.0; redistributing a combined package that includes it can create obligations beyond the MIT license of this repository.

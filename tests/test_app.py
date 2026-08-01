@@ -42,3 +42,12 @@ def test_static_interface_is_english_first() -> None:
     html = (Path(__file__).parents[1] / "static" / "index.html").read_text(encoding="utf-8")
     assert '<html lang="en">' in html
     assert not re.search(r"[А-Яа-яЁё]", html)
+
+
+def test_static_interface_uses_manrope_only() -> None:
+    root = Path(__file__).parents[1]
+    styles = (root / "static" / "styles.css").read_text(encoding="utf-8")
+    font_files = {path.name.lower() for path in (root / "static" / "fonts").iterdir()}
+    assert "font-family:Manrope" in styles
+    assert "fraunces" not in styles.lower()
+    assert not any("fraunces" in name for name in font_files)
