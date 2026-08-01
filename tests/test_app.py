@@ -51,3 +51,10 @@ def test_static_interface_uses_manrope_only() -> None:
     assert "font-family:Manrope" in styles
     assert "fraunces" not in styles.lower()
     assert not any("fraunces" in name for name in font_files)
+
+
+def test_display_headings_do_not_end_with_full_stops() -> None:
+    html = (Path(__file__).parents[1] / "static" / "index.html").read_text(encoding="utf-8")
+    headings = re.findall(r"<h[1-6][^>]*>(.*?)</h[1-6]>", html, flags=re.DOTALL)
+    visible_headings = [re.sub(r"<[^>]+>", "", heading).strip() for heading in headings]
+    assert all("." not in heading for heading in visible_headings)
