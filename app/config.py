@@ -21,7 +21,7 @@ def runtime_path(env_name: str, local_name: str, legacy: str) -> Path:
     if configured := os.environ.get(env_name):
         return Path(configured).resolve()
     portable = RUNTIME_ROOT / local_name
-    if portable.exists():
+    if (portable / ".venv" / "Scripts" / "python.exe").is_file() or (portable / ".venv" / "bin" / "python").is_file():
         return portable
     return Path(legacy)
 
@@ -35,7 +35,18 @@ LINLY_PYTHON = LINLY_ROOT / ".venv" / "Scripts" / "python.exe"
 QWEN_PYTHON = QWEN_ROOT / ".venv" / "Scripts" / "python.exe"
 SEEDVC_PYTHON = SEEDVC_ROOT / ".venv" / "Scripts" / "python.exe"
 HYMT_PYTHON = HYMT_ROOT / ".venv" / "Scripts" / "python.exe"
-ASR_MODEL = LINLY_ROOT / "models" / "faster-whisper-large-v3"
+def discover_asr_model(root: Path) -> Path:
+    """Support both the portable layout and the earlier Hugging Face cache layout."""
+    portable = root / "models" / "faster-whisper-large-v3"
+    if (portable / "model.bin").is_file():
+        return portable
+    snapshots = root / "models" / "ASR" / "models--Systran--faster-whisper-large-v3" / "snapshots"
+    for candidate in sorted(snapshots.glob("*/model.bin")):
+        return candidate.parent
+    return portable
+
+
+ASR_MODEL = discover_asr_model(LINLY_ROOT)
 HYMT_MODEL = HYMT_ROOT / "models" / "Hy-MT2-7B-FP8"
 TORCH_HOME = LINLY_ROOT / "models" / "torch"
 
