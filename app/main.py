@@ -15,7 +15,7 @@ from . import config
 from .media import VIDEO_SUFFIXES, make_thumbnail, probe
 from .pipeline import analyze, jobs, recover_interrupted_jobs, render
 from .schemas import AnalyzeRequest, PreviewRequest, RenderRequest, SegmentPatch
-from .store import add_event, create_project, invalidate_current_export, list_projects, load_project, project_dir, save_project
+from .store import add_event, create_project, delete_project, invalidate_current_export, list_projects, load_project, project_dir, save_project
 
 
 @asynccontextmanager
@@ -96,6 +96,18 @@ def get_project(project_id: str) -> dict:
         return load_project(project_id)
     except FileNotFoundError as exc:
         raise HTTPException(404, "Project not found.") from exc
+
+
+@app.delete("/api/projects/{project_id}")
+def remove_project(project_id: str) -> dict:
+    project = get_project(project_id)
+    if project.get("status") in {"queued", "analyzing", "rendering"}:
+        raise HTTPException(409, "Wait for processing to finish before deleting this project.")
+    try:
+        delete_project(project_id)
+    except FileNotFoundError as exc:
+        raise HTTPException(404, "Project not found.") from exc
+    return {"deleted": True, "id": project_id}
 
 
 @app.post("/api/projects/{project_id}/analyze")

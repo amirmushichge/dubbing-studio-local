@@ -6,7 +6,8 @@ from fastapi.testclient import TestClient
 from app import main as main_module
 from app.main import app
 from app.pipeline import normalized_words, recovery_action, safe_output_name, select_background, write_srt
-from app.store import invalidate_current_export
+from app import store as store_module
+from app.store import delete_project, invalidate_current_export
 
 
 def test_catalog_has_languages_voices_and_subtitles() -> None:
@@ -118,3 +119,26 @@ def test_quality_review_blocks_download(monkeypatch, tmp_path: Path) -> None:
     project["status"] = "complete"
     response = TestClient(app).get("/api/projects/example/download/output")
     assert response.status_code == 200
+
+
+def test_delete_project_removes_only_selected_folder(monkeypatch, tmp_path: Path) -> None:
+    projects = tmp_path / "projects"
+    selected = projects / "abc123"
+    preserved = projects / "keep456"
+    selected.mkdir(parents=True)
+    preserved.mkdir()
+    (selected / "project.json").write_text("{}", encoding="utf-8")
+    (selected / "output.mp4").write_bytes(b"video")
+    (preserved / "project.json").write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(store_module, "PROJECTS_ROOT", projects)
+
+    delete_project("abc123")
+
+    assert not selected.exists()
+    assert preserved.exists()
+
+
+def test_busy_project_cannot_be_deleted(monkeypatch) -> None:
+    monkeypatch.setattr(main_module, "get_project", lambda project_id: {"id": project_id, "status": "rendering"})
+    response = TestClient(app).delete("/api/projects/example")
+    assert response.status_code == 409

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 import threading
 import uuid
 from datetime import datetime, timezone
@@ -23,6 +24,16 @@ def project_dir(project_id: str) -> Path:
 
 def project_file(project_id: str) -> Path:
     return project_dir(project_id) / "project.json"
+
+
+def delete_project(project_id: str) -> None:
+    """Delete one project directory after proving it is inside the project root."""
+    with _lock:
+        root = PROJECTS_ROOT.resolve()
+        folder = project_dir(project_id).resolve()
+        if folder.parent != root or folder.name != project_id or not project_file(project_id).is_file():
+            raise FileNotFoundError(project_id)
+        shutil.rmtree(folder)
 
 
 def create_project(filename: str) -> dict[str, Any]:
