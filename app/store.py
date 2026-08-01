@@ -45,10 +45,41 @@ def create_project(filename: str) -> dict[str, Any]:
         "render": {},
         "quality": {},
         "error": None,
+        "exports": [],
         "events": [],
     }
     save_project(project)
     return project
+
+
+def archive_current_export(project: dict[str, Any]) -> None:
+    """Keep the currently referenced files before the project moves to a newer result."""
+    current = project.get("output") or {}
+    video = current.get("video")
+    if not video:
+        return
+    exports = project.setdefault("exports", [])
+    if any(item.get("video") == video for item in exports):
+        return
+    exports.append({
+        **current,
+        "created_at": current.get("created_at") or project.get("updated_at") or now(),
+        "render": dict(project.get("render") or {}),
+        "quality": dict(project.get("quality") or {}),
+    })
+
+
+def invalidate_current_export(project: dict[str, Any], stage: str) -> None:
+    """Archive a stale result and require a new render without deleting any media."""
+    archive_current_export(project)
+    project.update({
+        "status": "review",
+        "stage": stage,
+        "progress": 100,
+        "output": {},
+        "quality": {},
+        "error": None,
+    })
 
 
 def load_project(project_id: str) -> dict[str, Any]:

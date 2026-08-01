@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#f3f2ed">
   <title>Dubbing Studio — Local voice translation</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="/static/styles.css?v=20260801-manrope">
+  <link rel="stylesheet" href="/static/styles.css?v=20260801-durable-qa">
   <link rel="stylesheet" href="/static/speaker.css">
 </head>
 <body>
@@ -118,13 +118,13 @@
           <div class="render-bar"><div><strong>Everything runs locally.</strong><small>Intermediate files and a quality report remain with the project.</small></div><button class="primary" id="renderButton">Create dub <span>→</span></button></div>
         </div>
 
-        <div id="resultPanel" class="step-panel hidden"><div class="result-grid"><article class="panel result-player"><video id="resultVideo" controls></video></article><article class="panel result-summary"><span class="success-mark">✓</span><span class="kicker">EXPORT READY</span><h3>Your video is ready</h3><p id="qualitySummary"></p><div class="quality-list" id="qualityList"></div><a class="primary wide button-link" id="downloadVideo" download>Download video</a><a class="secondary wide button-link" id="downloadSrt" download>Download SRT</a></article></div></div>
+        <div id="resultPanel" class="step-panel hidden"><div class="result-grid"><article class="panel result-player"><video id="resultVideo" controls></video></article><article class="panel result-summary"><span class="success-mark" id="resultMark">✓</span><span class="kicker" id="resultKicker">EXPORT READY</span><h3 id="resultTitle">Your video is ready</h3><p id="qualitySummary"></p><div class="quality-list" id="qualityList"></div><a class="primary wide button-link" id="downloadVideo" download>Download video</a><a class="secondary wide button-link" id="downloadSrt" download>Download SRT</a></article></div></div>
 
         <details class="log-panel"><summary>Project activity <span id="eventCount">0</span></summary><div id="eventLog"></div></details>
       </section>
     </main>
   </div>
   <div class="toast" id="toast"></div>
-  <script src="/static/app.js?v=20260801-project-isolation"></script>
+  <script src="/static/app.js?v=20260801-durable-qa"></script>
 </body>
 </html>

@@ -19,6 +19,9 @@ After the first setup, inference runs on your computer. Source videos and voice 
 - Controls delivery expression and background-audio level.
 - Disables captions completely or applies one of six caption treatments.
 - Checks duration, recognition coverage, voice similarity, boundaries, peaks, loudness and output decoding.
+- Blocks downloads when a mandatory quality gate reports a warning.
+- Keeps versioned MP4 and SRT exports instead of overwriting an earlier render.
+- Recovers queued work after a restart and marks an interrupted active stage for a safe retry.
 - Works offline after the complete first installation.
 
 ## System requirements
@@ -95,7 +98,7 @@ This is a private address on your own computer, not a public website. Keep the s
 8. Set expression and background-audio level. A background value of `70%` means 30% quieter than the source mix.
 9. Enable or disable captions. If enabled, select a treatment and whether captions should be burned into the video.
 10. Select render quality and create the dub.
-11. Review the quality report, then download the MP4 and optional SRT.
+11. Review the quality report. MP4 and SRT downloads unlock only after every automated gate passes.
 
 Recommended starting point: original voice preservation, moderate expression, 45–60% background audio, Clean captions and High quality.
 
@@ -151,6 +154,8 @@ Dubbing-Studio/
 
 `runtime/`, `data/` and `logs/` are excluded from Git. To keep projects on another drive, copy `.env.example` to `.env` and set `DUBBING_STUDIO_DATA`. To place models elsewhere, set `DUBBING_STUDIO_RUNTIME` **before the first setup**.
 
+Every successful render receives a unique ID and remains in the project’s `output/` directory. Editing a completed transcript archives the current result and returns the project to Review so stale media cannot be presented as current. The `exports` array in `project.json` records the version history.
+
 ## Updating and uninstalling
 
 Git installations can run **`update.bat`**. It pulls the latest commit and safely reapplies setup. ZIP users can download the latest archive and run `setup.bat` again.
@@ -169,6 +174,8 @@ Run `doctor.ps1`. Every required runtime, model, FFmpeg and NVIDIA check should 
 | Not enough storage | Free at least 45 GB on the runtime drive or set `DUBBING_STUDIO_RUNTIME`. |
 | A download was interrupted | Run `setup.bat` again; Hugging Face continues incomplete files. |
 | Port 8765 is in use | If Dubbing Studio is already running, the script opens it. Otherwise stop the process using that port. |
+| A task was queued when the app closed | Start Dubbing Studio again; queued tasks are restored automatically. A task interrupted mid-model is marked Failed so it can be retried safely. |
+| Download is blocked by QA | Read the listed warning, correct the transcript, speaker assignment or settings, then render a new version. The preview remains available for diagnosis. |
 | The dub has a source accent | Verify the target language, preserve the original voice, correct punctuation and avoid maximum expression. |
 | Voice identity changes | Verify speaker count and assignments. Longer clean speech references produce more stable identities. |
 | Clicks or noise are audible | Reduce the background level and review QA warnings. Clean source dialogue produces the best result. |

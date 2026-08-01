@@ -6,9 +6,9 @@ Dubbing Studio is a local orchestrator for specialized models. The web server do
 
 ## Project state
 
-`uploaded → queued → analyzing → review → queued → rendering → complete`
+`uploaded → queued → analyzing → review → queued → rendering → complete | quality_review`
 
-Any stage may transition to `failed`. A project can be corrected and run again without deleting earlier artifacts.
+Any stage may transition to `failed`. A project can be corrected and run again without deleting earlier artifacts. `quality_review` keeps the preview available but blocks download until a later version passes every automated gate.
 
 ## Project directory
 
@@ -24,7 +24,11 @@ data/projects/<id>/
 
 ## GPU queue
 
-The backend runs a single heavy-task queue. This prevents Hy-MT2, Qwen3-TTS and Seed-VC from competing for RTX 4080 Super VRAM. Queue state is visible in the interface.
+The backend runs a single heavy-task queue. This prevents Hy-MT2, Qwen3-TTS and Seed-VC from competing for RTX 4080 Super VRAM. Queued payloads are persisted in `project.json` and restored on startup. A task interrupted while a model was active is marked Failed rather than left permanently stuck, allowing a safe manual retry.
+
+## Export safety
+
+Each render uses a unique run ID for its MP4 and SRT. Earlier files remain in `output/` and their metadata is retained in `project.json → exports`. Transcript changes archive and invalidate the current result. Preview media is available during quality review, while `/download/*` endpoints require the project to be `complete`.
 
 ## Pipeline
 

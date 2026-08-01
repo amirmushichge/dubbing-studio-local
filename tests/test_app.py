@@ -3,8 +3,10 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
+from app import main as main_module
 from app.main import app
-from app.pipeline import normalized_words, write_srt
+from app.pipeline import normalized_words, recovery_action, safe_output_name, select_background, write_srt
+from app.store import invalidate_current_export
 
 
 def test_catalog_has_languages_voices_and_subtitles() -> None:
@@ -21,6 +23,7 @@ def test_catalog_has_languages_voices_and_subtitles() -> None:
 
 def test_health_explains_runtime_state() -> None:
     payload = TestClient(app).get("/api/health").json()
+    assert payload["app_id"] == "dubbing-studio-local"
     assert "runtime_ready" in payload
     assert "checks" in payload
     assert "runtime" in payload
@@ -58,3 +61,60 @@ def test_display_headings_do_not_end_with_full_stops() -> None:
     headings = re.findall(r"<h[1-6][^>]*>(.*?)</h[1-6]>", html, flags=re.DOTALL)
     visible_headings = [re.sub(r"<[^>]+>", "", heading).strip() for heading in headings]
     assert all("." not in heading for heading in visible_headings)
+
+
+def test_stale_export_is_archived_and_invalidated() -> None:
+    project = {
+        "status": "complete", "stage": "Complete", "progress": 100,
+        "updated_at": "2026-08-01T00:00:00+00:00",
+        "output": {"video": "old.mp4", "subtitles": "old.srt"},
+        "render": {"target_language": "en"}, "quality": {"warnings": []}, "exports": [],
+    }
+    invalidate_current_export(project, "Transcript updated — render required")
+    assert project["status"] == "review"
+    assert project["output"] == {}
+    assert project["exports"][0]["video"] == "old.mp4"
+
+
+def test_queued_jobs_have_recoverable_payloads() -> None:
+    analysis = recovery_action({
+        "status": "queued", "stage": "Queued for analysis",
+        "analysis": {"source_language": "ru", "speaker_count": 2},
+    })
+    rendering = recovery_action({
+        "status": "queued", "stage": "Queued for rendering",
+        "render": {"target_language": "en", "run_id": "abc"},
+    })
+    assert analysis and analysis[0].__name__ == "analyze" and analysis[1]["speaker_count"] == 2
+    assert rendering and rendering[0].__name__ == "render" and rendering[1]["run_id"] == "abc"
+
+
+def test_output_names_are_version_safe() -> None:
+    assert safe_output_name('bad:name/with*chars.') == "bad_name_with_chars"
+
+
+def test_missing_background_never_falls_back_to_original_speech(tmp_path: Path) -> None:
+    source = tmp_path / "source.mp4"
+    source.touch()
+    work = tmp_path / "work"
+    work.mkdir()
+    assert select_background(work, source, mock_mode=True) == source
+    try:
+        select_background(work, source, mock_mode=False)
+    except RuntimeError as exc:
+        assert "refusing to mix the original speech" in str(exc)
+    else:
+        raise AssertionError("Production mode accepted a missing separated background")
+
+
+def test_quality_review_blocks_download(monkeypatch, tmp_path: Path) -> None:
+    video = tmp_path / "result.mp4"
+    video.write_bytes(b"video")
+    project = {"status": "quality_review", "output": {"video": str(video), "subtitles": None}}
+    monkeypatch.setattr(main_module, "get_project", lambda project_id: project)
+    response = TestClient(app).get("/api/projects/example/download/output")
+    assert response.status_code == 409
+
+    project["status"] = "complete"
+    response = TestClient(app).get("/api/projects/example/download/output")
+    assert response.status_code == 200

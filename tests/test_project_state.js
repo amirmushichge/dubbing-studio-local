@@ -6,9 +6,11 @@ const { state, projectStep, isActiveProject } = require('../static/app.js');
 test('a review project never inherits the export step', () => {
   const reviewProject = { status: 'review', analysis: { segments: [{ text: 'Line' }] } };
   const completeProject = { status: 'complete', analysis: { segments: [{ text: 'Line' }] } };
+  const qualityReviewProject = { status: 'quality_review', analysis: { segments: [{ text: 'Line' }] } };
 
   assert.equal(projectStep(reviewProject), 'transcript');
   assert.equal(projectStep(completeProject), 'result');
+  assert.equal(projectStep(qualityReviewProject), 'result');
 });
 
 test('updates from a previous project or navigation are rejected', () => {

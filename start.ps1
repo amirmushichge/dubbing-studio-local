@@ -16,6 +16,14 @@ if ($LASTEXITCODE -ne 0) { throw 'Some components are missing. Run setup.bat aga
 
 $occupied = Get-NetTCPConnection -LocalPort 8765 -State Listen -ErrorAction SilentlyContinue
 if ($occupied) {
+    try {
+        $runningHealth = Invoke-RestMethod -Uri 'http://127.0.0.1:8765/api/health' -TimeoutSec 3
+    } catch {
+        throw 'Port 8765 is occupied by another application. Close that application or free the port before starting Dubbing Studio.'
+    }
+    if ($runningHealth.app_id -ne 'dubbing-studio-local') {
+        throw 'Port 8765 is occupied by another application. Dubbing Studio was not opened.'
+    }
     Start-Process 'http://127.0.0.1:8765' | Out-Null
     Write-Host 'Dubbing Studio is already running; the existing workspace was opened.' -ForegroundColor Yellow
     exit 0

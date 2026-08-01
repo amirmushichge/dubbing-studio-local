@@ -8,13 +8,14 @@ import shutil
 import subprocess
 import threading
 import time
+import uuid
 from pathlib import Path
 from typing import Callable
 
 from . import config
 from .config import ASR_MODEL, HYMT_MODEL, HYMT_PYTHON, HYMT_ROOT, LINLY_PYTHON, LINLY_ROOT, MOCK_MODE, QWEN_PYTHON, QWEN_ROOT, SEEDVC_PYTHON, SEEDVC_ROOT, TORCH_HOME
 from .media import probe, run
-from .store import add_event, load_project, project_dir, save_project
+from .store import add_event, archive_current_export, list_projects, load_project, now, project_dir, save_project
 
 
 WORKERS = config.ROOT / "workers"
@@ -123,6 +124,20 @@ def normalized_words(text: str) -> set[str]:
     return set(re.findall(r"\w+", text.lower(), flags=re.UNICODE))
 
 
+def safe_output_name(value: str) -> str:
+    cleaned = re.sub(r'[<>:"/\\|?*\x00-\x1f]+', "_", value).strip(" ._")
+    return cleaned[:120] or "dub"
+
+
+def select_background(work: Path, source: Path, mock_mode: bool) -> Path:
+    background = work / "background.wav"
+    if background.exists():
+        return background
+    if mock_mode:
+        return source
+    raise RuntimeError("Separated background audio is missing; refusing to mix the original speech under the dub")
+
+
 def render(project_id: str, request: dict) -> None:
     project = load_project(project_id)
     project.update({"status": "rendering", "render": request, "progress": 0})
@@ -214,10 +229,13 @@ def render(project_id: str, request: dict) -> None:
         translated = json.loads(translation.read_text(encoding="utf-8"))
         subtitles = work / "subtitles.srt"
         write_srt(translated, subtitles)
-        output = folder / "output" / f"{project['name']}_{request['target_language']}_dub.mp4"
-        background = work / "background.wav"
-        if not background.exists():
-            background = source
+        run_id = re.sub(r"[^a-zA-Z0-9_-]", "", request.get("run_id", "")) or uuid.uuid4().hex[:10]
+        output_stem = f"{safe_output_name(project['name'])}_{request['target_language']}_dub_{run_id}"
+        output = folder / "output" / f"{output_stem}.mp4"
+        exported_subtitles = folder / "output" / f"{output_stem}.srt"
+        background = select_background(work, source, MOCK_MODE)
+        if not (work / "dub.wav").exists():
+            raise RuntimeError("Synthesized dub audio is missing")
         audio_filter = f"[1:a]volume={request['background_volume']:.3f}[bg];[2:a]volume=1.04,highpass=f=60,lowpass=f=11000,acompressor=threshold=-19dB:ratio=1.8:attack=15:release=140,alimiter=limit=0.94[vo];[bg][vo]amix=inputs=2:duration=longest:normalize=0,loudnorm=I=-15:TP=-2:LRA=7[a]"
         command = ["ffmpeg", "-y", "-hide_banner", "-i", str(source), "-i", str(background), "-i", str(work / "dub.wav"), "-filter_complex", audio_filter]
         if request["subtitle_enabled"] and request["burn_subtitles"]:
@@ -226,6 +244,7 @@ def render(project_id: str, request: dict) -> None:
         cq = {"draft": "25", "balanced": "21", "high": "19"}[request["quality"]]
         command.extend(["-map", "0:v:0", "-map", "[a]", "-c:v", "h264_nvenc", "-preset", "p6", "-tune", "hq", "-rc", "vbr", "-cq", cq, "-b:v", "4M", "-maxrate", "8M", "-bufsize", "8M", "-c:a", "aac", "-b:a", "256k", "-ar", "48000", "-ac", "2", "-t", str(project["media"]["duration"]), "-movflags", "+faststart", str(output)])
         execute(project_id, "render", command, cwd=folder)
+        shutil.copy2(subtitles, exported_subtitles)
 
         set_stage(project_id, "Running quality checks", 90)
         quality = {"media": probe(output), "max_speed": None, "asr_coverage": None, "warnings": []}
@@ -253,12 +272,39 @@ def render(project_id: str, request: dict) -> None:
             audio_quality = json.loads(qa_audio_path.read_text(encoding="utf-8"))
             quality.update({key: value for key, value in audio_quality.items() if key != "warnings"})
             quality["warnings"].extend(audio_quality["warnings"])
+            if request["voice_mode"] == "clone":
+                measured = set(quality.get("speaker_similarity") or {})
+                expected_speakers = {item["id"] for item in speakers}
+                missing_speakers = sorted(expected_speakers - measured)
+                if missing_speakers:
+                    quality["warnings"].append(f"Voice similarity was not measured for: {', '.join(missing_speakers)}")
+            if quality["max_speed"] is None:
+                quality["warnings"].append("Timing speed was not measured")
+            if quality["asr_coverage"] is None:
+                quality["warnings"].append("Target-language ASR coverage was not measured")
         execute(project_id, "decode_check", ["ffmpeg", "-v", "error", "-i", str(output), "-f", "null", "NUL"])
         project = load_project(project_id)
-        project.update({"status": "complete", "stage": "Complete", "progress": 100, "quality": quality})
-        project["output"] = {"video": str(output), "subtitles": str(subtitles)}
+        archive_current_export(project)
+        quality["warnings"] = list(dict.fromkeys(quality["warnings"]))
+        accepted = not quality["warnings"]
+        project.update({
+            "status": "complete" if accepted else "quality_review",
+            "stage": "Complete" if accepted else "Quality review required",
+            "progress": 100,
+            "quality": quality,
+        })
+        project["output"] = {
+            "video": str(output), "subtitles": str(exported_subtitles),
+            "run_id": run_id, "created_at": now(),
+        }
+        project.setdefault("exports", []).append({
+            **project["output"], "render": dict(request), "quality": dict(quality),
+        })
         save_project(project)
-        add_event(project_id, "success", "Dub and quality checks complete")
+        if accepted:
+            add_event(project_id, "success", "Dub and quality checks complete")
+        else:
+            add_event(project_id, "warning", "Download blocked until quality warnings are resolved")
     except Exception as exc:
         fail(project_id, exc)
 
@@ -274,12 +320,19 @@ class JobQueue:
     def __init__(self) -> None:
         self.queue: queue.Queue[tuple[str, Callable, dict]] = queue.Queue()
         self.active: str | None = None
+        self.pending: set[str] = set()
+        self.lock = threading.Lock()
         self.thread = threading.Thread(target=self._loop, name="dubbing-gpu-worker", daemon=True)
         self.thread.start()
 
-    def submit(self, project_id: str, task: Callable, payload: dict) -> None:
+    def submit(self, project_id: str, task: Callable, payload: dict) -> bool:
+        with self.lock:
+            if project_id in self.pending or self.active == project_id:
+                return False
+            self.pending.add(project_id)
         self.queue.put((project_id, task, payload))
         add_event(project_id, "info", f"Task added to the queue: position {self.queue.qsize()}")
+        return True
 
     def _loop(self) -> None:
         while True:
@@ -288,8 +341,51 @@ class JobQueue:
             try:
                 task(project_id, payload)
             finally:
-                self.active = None
+                with self.lock:
+                    self.pending.discard(project_id)
+                    self.active = None
                 self.queue.task_done()
 
 
 jobs = JobQueue()
+
+
+def recovery_action(project: dict) -> tuple[Callable, dict] | None:
+    if project.get("status") != "queued":
+        return None
+    stage = str(project.get("stage", "")).lower()
+    if "render" in stage and project.get("render", {}).get("target_language"):
+        return render, dict(project["render"])
+    if "analysis" in stage or "analy" in stage:
+        analysis = project.get("analysis") or {}
+        return analyze, {
+            "source_language": analysis.get("source_language", "auto"),
+            "speaker_count": analysis.get("speaker_count", "auto"),
+        }
+    return None
+
+
+def recover_interrupted_jobs() -> dict[str, int]:
+    recovered = 0
+    interrupted = 0
+    for project in list_projects():
+        status = project.get("status")
+        if status == "queued":
+            action = recovery_action(project)
+            if action and jobs.submit(project["id"], *action):
+                recovered += 1
+                add_event(project["id"], "info", "Queued task recovered after application restart")
+            elif not action:
+                project.update({"status": "failed", "stage": "Recovery required", "error": "Queued task payload is incomplete"})
+                save_project(project)
+                add_event(project["id"], "error", "Queued task could not be recovered; run it again")
+                interrupted += 1
+        elif status in {"analyzing", "rendering"}:
+            project.update({
+                "status": "failed", "stage": "Interrupted",
+                "error": "Processing was interrupted when the application stopped; run this step again",
+            })
+            save_project(project)
+            add_event(project["id"], "error", "Interrupted processing detected after application restart")
+            interrupted += 1
+    return {"recovered": recovered, "interrupted": interrupted}

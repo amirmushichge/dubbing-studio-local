@@ -3,6 +3,8 @@ from __future__ import annotations
 import asyncio
 import json
 import shutil
+import uuid
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
@@ -11,12 +13,18 @@ from fastapi.staticfiles import StaticFiles
 
 from . import config
 from .media import VIDEO_SUFFIXES, make_thumbnail, probe
-from .pipeline import analyze, jobs, render
+from .pipeline import analyze, jobs, recover_interrupted_jobs, render
 from .schemas import AnalyzeRequest, PreviewRequest, RenderRequest, SegmentPatch
-from .store import create_project, list_projects, load_project, project_dir, save_project
+from .store import add_event, create_project, invalidate_current_export, list_projects, load_project, project_dir, save_project
 
 
-app = FastAPI(title="Dubbing Studio", version="0.1.0")
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    recover_interrupted_jobs()
+    yield
+
+
+app = FastAPI(title="Dubbing Studio", version="0.1.0", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=config.ROOT / "static"), name="static")
 
 
@@ -30,6 +38,7 @@ def health() -> dict:
     checks = {name: path.exists() for name, path in config.RUNTIME_CHECKS.items()}
     ready = all(checks.values())
     return {
+        "app_id": "dubbing-studio-local",
         "ok": ready or config.MOCK_MODE,
         "runtime_ready": ready,
         "mock": config.MOCK_MODE,
@@ -92,10 +101,13 @@ def get_project(project_id: str) -> dict:
 @app.post("/api/projects/{project_id}/analyze")
 def start_analysis(project_id: str, request: AnalyzeRequest) -> dict:
     project = get_project(project_id)
-    if project["status"] in {"analyzing", "rendering"}:
+    if project["status"] in {"queued", "analyzing", "rendering"}:
         raise HTTPException(409, "This project is already processing.")
+    if project.get("output"):
+        invalidate_current_export(project, "New analysis requires a new render")
     project["status"] = "queued"
     project["stage"] = "Queued for analysis"
+    project["analysis"].update(request.model_dump())
     save_project(project)
     jobs.submit(project_id, analyze, request.model_dump())
     return project
@@ -104,12 +116,16 @@ def start_analysis(project_id: str, request: AnalyzeRequest) -> dict:
 @app.patch("/api/projects/{project_id}/transcript")
 def patch_transcript(project_id: str, patch: SegmentPatch) -> dict:
     project = get_project(project_id)
-    if project["status"] not in {"review", "failed", "complete"}:
+    if project["status"] not in {"review", "failed", "complete", "quality_review"}:
         raise HTTPException(409, "The transcript cannot be changed while the project is processing.")
     project["analysis"]["segments"] = patch.segments
     if patch.speakers is not None:
         project["analysis"]["speakers"] = patch.speakers
+    if project.get("output"):
+        invalidate_current_export(project, "Transcript updated — render required")
     save_project(project)
+    if project["stage"] == "Transcript updated — render required":
+        add_event(project_id, "warning", "Previous export archived because the transcript changed")
     return project
 
 
@@ -120,10 +136,13 @@ def start_render(project_id: str, request: RenderRequest) -> dict:
         raise HTTPException(409, "This project is already processing.")
     if not project["analysis"].get("segments"):
         raise HTTPException(400, "Run the analysis first.")
+    render_request = request.model_dump()
+    render_request["run_id"] = uuid.uuid4().hex[:10]
     project["status"] = "queued"
     project["stage"] = "Queued for rendering"
+    project["render"] = render_request
     save_project(project)
-    jobs.submit(project_id, render, request.model_dump())
+    jobs.submit(project_id, render, render_request)
     return project
 
 
@@ -167,6 +186,22 @@ def project_media(project_id: str, kind: str) -> FileResponse:
     if not selected or not Path(selected).exists():
         raise HTTPException(404)
     media_type = "video/mp4" if kind in {"input", "output"} else "image/jpeg" if kind == "thumbnail" else "application/x-subrip"
+    return FileResponse(selected, media_type=media_type, filename=Path(selected).name)
+
+
+@app.get("/api/projects/{project_id}/download/{kind}")
+def project_download(project_id: str, kind: str) -> FileResponse:
+    project = get_project(project_id)
+    if project.get("status") != "complete":
+        raise HTTPException(409, "Download is blocked until all quality gates pass.")
+    paths = {
+        "output": project.get("output", {}).get("video"),
+        "subtitles": project.get("output", {}).get("subtitles"),
+    }
+    selected = paths.get(kind)
+    if not selected or not Path(selected).exists():
+        raise HTTPException(404)
+    media_type = "video/mp4" if kind == "output" else "application/x-subrip"
     return FileResponse(selected, media_type=media_type, filename=Path(selected).name)
 
 

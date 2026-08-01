@@ -90,7 +90,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .primary{border:1px solid var(--ink);background:var(--ink);color:var(--white);box-shadow:0 10px 24px rgba(17,17,15,.10)}
 .primary:hover{background:#30302c;transform:translateY(-1px)}.primary:disabled{opacity:.4;cursor:not-allowed;transform:none}
 .secondary{border:1px solid var(--line-dark);background:var(--paper);color:var(--ink)}.secondary:hover{border-color:var(--ink);background:var(--white)}
-.wide{width:100%}.button-link{text-decoration:none;text-align:center}
+.wide{width:100%}.button-link{text-decoration:none;text-align:center}.button-link.disabled{pointer-events:none;cursor:not-allowed;opacity:.42}
 
 .project-hero{display:grid;grid-template-columns:190px minmax(0,1fr);gap:30px;align-items:center;padding:10px 0 34px}
 .video-card{height:126px;border:1px solid var(--line);border-radius:18px;overflow:hidden;position:relative;background:var(--wash);box-shadow:0 12px 34px rgba(17,17,15,.07)}
