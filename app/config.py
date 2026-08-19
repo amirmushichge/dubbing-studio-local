@@ -86,13 +86,20 @@ VOICE_PERSONAS = [
 ]
 
 SUBTITLE_STYLES = [
-    {"id": "clean", "label": "Clean", "description": "White type · fine outline", "force_style": "FontName=Arial,FontSize=16,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=1.6,Shadow=0,Alignment=2,MarginV=55"},
-    {"id": "cinema", "label": "Cinema", "description": "Soft warm-white type", "force_style": "FontName=Arial,FontSize=17,PrimaryColour=&H00F2F5FF,OutlineColour=&H000B0D12,BorderStyle=1,Outline=2.2,Shadow=0.5,Alignment=2,MarginV=58"},
-    {"id": "social", "label": "Social", "description": "Large bold captions", "force_style": "FontName=Arial,FontSize=22,Bold=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=3,Shadow=0,Alignment=2,MarginV=72"},
-    {"id": "boxed", "label": "Boxed", "description": "Type on a soft backdrop", "force_style": "FontName=Arial,FontSize=17,PrimaryColour=&H00FFFFFF,BackColour=&H90000000,OutlineColour=&H90000000,BorderStyle=3,Outline=6,Shadow=0,Alignment=2,MarginV=55"},
-    {"id": "accent", "label": "Editorial", "description": "Strong editorial accent", "force_style": "FontName=Arial,FontSize=20,Bold=1,PrimaryColour=&H0000E8FF,OutlineColour=&H00101010,BorderStyle=1,Outline=2.5,Shadow=0,Alignment=2,MarginV=65"},
-    {"id": "minimal", "label": "Minimal", "description": "Small restrained captions", "force_style": "FontName=Arial,FontSize=14,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=1.2,Shadow=0,Alignment=2,MarginV=42"},
+    {"id": "clean", "label": "Clean", "description": "Fine outline", "force_style": "FontName=Manrope,FontSize=20,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=1.6,Shadow=0,Alignment=2,MarginV=55"},
+    {"id": "cinema", "label": "Cinema", "description": "Soft cinematic edge", "force_style": "FontName=Manrope,FontSize=20,PrimaryColour=&H00FFFFFF,OutlineColour=&H000B0D12,BorderStyle=1,Outline=2.2,Shadow=0.5,Alignment=2,MarginV=58"},
+    {"id": "social", "label": "Social", "description": "Large bold caption", "force_style": "FontName=Manrope,FontSize=20,Bold=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=3,Shadow=0,Alignment=2,MarginV=72"},
+    {"id": "boxed", "label": "Boxed", "description": "Soft backdrop", "force_style": "FontName=Manrope,FontSize=20,PrimaryColour=&H00FFFFFF,BackColour=&H90000000,OutlineColour=&H90000000,BorderStyle=3,Outline=6,Shadow=0,Alignment=2,MarginV=55"},
+    {"id": "accent", "label": "Editorial", "description": "Strong editorial weight", "force_style": "FontName=Manrope,FontSize=20,Bold=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00101010,BorderStyle=1,Outline=2.5,Shadow=0,Alignment=2,MarginV=65"},
+    {"id": "minimal", "label": "Minimal", "description": "Restrained caption", "force_style": "FontName=Manrope,FontSize=20,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=1.2,Shadow=0,Alignment=2,MarginV=42"},
 ]
+
+SUBTITLE_SIZES = {"small": 16, "medium": 20, "large": 24}
+SUBTITLE_COLORS = {
+    "white": {"primary": "&H00FFFFFF", "outline": "&H00000000"},
+    "yellow": {"primary": "&H0000D4FF", "outline": "&H00000000"},
+    "black": {"primary": "&H00000000", "outline": "&H00FFFFFF"},
+}
 
 for path in (DATA_ROOT, PROJECTS_ROOT, CACHE_ROOT, PREVIEWS_ROOT):
     path.mkdir(parents=True, exist_ok=True)
@@ -108,3 +115,21 @@ def voice(voice_id: str) -> dict:
 
 def subtitle_style(style_id: str) -> dict:
     return next(item for item in SUBTITLE_STYLES if item["id"] == style_id)
+
+
+def subtitle_force_style(style_id: str, size: str = "medium", color: str = "white") -> str:
+    """Resolve the visible subtitle controls into one libass force-style string."""
+    values = {}
+    for item in subtitle_style(style_id)["force_style"].split(","):
+        key, value = item.split("=", 1)
+        values[key] = value
+    palette = SUBTITLE_COLORS[color]
+    values.update({
+        "FontName": "Manrope",
+        "FontSize": str(SUBTITLE_SIZES[size]),
+        "PrimaryColour": palette["primary"],
+        "OutlineColour": palette["outline"],
+    })
+    if style_id == "boxed":
+        values["BackColour"] = "&H90FFFFFF" if color == "black" else "&H90000000"
+    return ",".join(f"{key}={value}" for key, value in values.items())

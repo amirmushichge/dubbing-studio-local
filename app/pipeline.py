@@ -239,8 +239,13 @@ def render(project_id: str, request: dict) -> None:
         audio_filter = f"[1:a]volume={request['background_volume']:.3f}[bg];[2:a]volume=1.04,highpass=f=60,lowpass=f=11000,acompressor=threshold=-19dB:ratio=1.8:attack=15:release=140,alimiter=limit=0.94[vo];[bg][vo]amix=inputs=2:duration=longest:normalize=0,loudnorm=I=-15:TP=-2:LRA=7[a]"
         command = ["ffmpeg", "-y", "-hide_banner", "-i", str(source), "-i", str(background), "-i", str(work / "dub.wav"), "-filter_complex", audio_filter]
         if request["subtitle_enabled"] and request["burn_subtitles"]:
-            style = config.subtitle_style(request["subtitle_style"])["force_style"]
-            command.extend(["-vf", f"subtitles=work/subtitles.srt:force_style='{style}'"])
+            style = config.subtitle_force_style(
+                request["subtitle_style"],
+                request.get("subtitle_size", "medium"),
+                request.get("subtitle_color", "white"),
+            )
+            fonts_dir = (config.ROOT / "static" / "fonts").as_posix().replace(":", r"\:")
+            command.extend(["-vf", f"subtitles=work/subtitles.srt:fontsdir='{fonts_dir}':force_style='{style}'"])
         cq = {"draft": "25", "balanced": "21", "high": "19"}[request["quality"]]
         command.extend(["-map", "0:v:0", "-map", "[a]", "-c:v", "h264_nvenc", "-preset", "p6", "-tune", "hq", "-rc", "vbr", "-cq", cq, "-b:v", "4M", "-maxrate", "8M", "-bufsize", "8M", "-c:a", "aac", "-b:a", "256k", "-ar", "48000", "-ac", "2", "-t", str(project["media"]["duration"]), "-movflags", "+faststart", str(output)])
         execute(project_id, "render", command, cwd=folder)

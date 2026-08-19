@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#f3f2ed">
   <title>Dubbing Studio — Local voice translation</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="/static/styles.css?v=20260801-project-delete">
+  <link rel="stylesheet" href="/static/styles.css?v=20260819-caption-controls">
   <link rel="stylesheet" href="/static/speaker.css">
 </head>
 <body>
@@ -111,7 +111,7 @@
           <div class="settings-grid">
             <article class="panel span-2"><div class="panel-head"><div><span class="kicker">LANGUAGE</span><h3>Translation language</h3></div><span class="panel-number">01</span></div><div id="targetLanguages" class="language-grid"></div></article>
             <article class="panel span-2"><div class="panel-head"><div><span class="kicker">VOICE</span><h3>How should the translation sound?</h3></div><span class="panel-number">02</span></div><div class="mode-grid"><label class="choice-card selected"><input type="radio" name="voiceMode" value="clone" checked><span class="choice-icon">◎</span><strong>Preserve original voices</strong><small>Each speaker’s timbre with native pronunciation.</small></label><label class="choice-card" id="catalogModeCard"><input type="radio" name="voiceMode" value="catalog"><span class="choice-icon">◌</span><strong>Choose a new voice</strong><small>Available for single-speaker videos.</small></label></div><div id="voiceCatalog" class="voice-grid hidden"></div></article>
-            <article class="panel span-2"><div class="subtitle-heading"><div><span class="kicker">SUBTITLES</span><h3>Caption treatment</h3></div><label class="switch"><input id="subtitleEnabled" type="checkbox" checked><span></span><b>Enabled</b></label></div><div id="subtitleStyles" class="subtitle-grid"></div><label class="check-row"><input id="burnSubtitles" type="checkbox" checked> Burn captions into the video <small>A separate SRT is always saved.</small></label></article>
+            <article class="panel span-2 caption-panel"><div class="subtitle-heading"><div><span class="kicker">SUBTITLES</span><h3>Caption treatment</h3></div><label class="switch"><input id="subtitleEnabled" type="checkbox" checked><span></span><b>Enabled</b></label></div><div id="subtitleControls"><div id="subtitleStyles" class="subtitle-grid" data-caption-size="medium" data-caption-color="white"></div><div class="caption-customize"><fieldset><legend>Size</legend><div class="caption-segment"><label><input type="radio" name="subtitleSize" value="small"><span>Small</span></label><label class="selected"><input type="radio" name="subtitleSize" value="medium" checked><span>Medium</span></label><label><input type="radio" name="subtitleSize" value="large"><span>Large</span></label></div></fieldset><fieldset><legend>Color</legend><div class="caption-color"><label class="selected"><input type="radio" name="subtitleColor" value="white" checked><i class="swatch white"></i><span>White</span></label><label><input type="radio" name="subtitleColor" value="yellow"><i class="swatch yellow"></i><span>Yellow</span></label><label><input type="radio" name="subtitleColor" value="black"><i class="swatch black"></i><span>Black</span></label></div></fieldset></div><label class="check-row"><input id="burnSubtitles" type="checkbox" checked> Burn captions into the video <small>A separate SRT is always saved.</small></label></div></article>
             <article class="panel"><span class="kicker">MIX</span><h3>Background audio</h3><label class="range-label"><span>Music & ambience level</span><b id="backgroundValue">42%</b></label><input id="backgroundVolume" type="range" min="0" max="100" value="42"></article>
             <article class="panel"><span class="kicker">DELIVERY</span><h3>Performance</h3><label class="range-label"><span>Restrained — expressive</span><b id="expressionValue">50%</b></label><input id="expression" type="range" min="0" max="100" value="50"><label>Render quality<select id="quality"><option value="high">High</option><option value="balanced">Balanced</option><option value="draft">Draft</option></select></label></article>
           </div>
@@ -125,6 +125,6 @@
     </main>
   </div>
   <div class="toast" id="toast"></div>
-  <script src="/static/app.js?v=20260801-project-delete"></script>
+  <script src="/static/app.js?v=20260819-caption-controls"></script>
 </body>
 </html>

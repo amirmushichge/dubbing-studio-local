@@ -17,7 +17,7 @@ After the first setup, inference runs on your computer. Source videos and voice 
 - Preserves a separate, stable voice identity for every speaker.
 - Offers previewable catalog voices for single-speaker videos when cloning is not needed.
 - Controls delivery expression and background-audio level.
-- Disables captions completely or applies one of six caption treatments.
+- Disables captions completely or applies one of six compact, live-preview caption treatments in Manrope, with independent Small/Medium/Large sizing and White/Yellow/Black color choices.
 - Checks duration, recognition coverage, voice similarity, boundaries, peaks, loudness and output decoding.
 - Blocks downloads when a mandatory quality gate reports a warning.
 - Keeps versioned MP4 and SRT exports instead of overwriting an earlier render.
@@ -96,11 +96,11 @@ This is a private address on your own computer, not a public website. Keep the s
    - **Preserve original voices** retains a separate timbre and manner for each person;
    - **Choose a new voice** creates a catalog voice for a single-speaker video.
 8. Set expression and background-audio level. A background value of `70%` means 30% quieter than the source mix.
-9. Enable or disable captions. If enabled, select a treatment and whether captions should be burned into the video.
+9. Enable or disable captions. If enabled, select a visual treatment, size and color from the live previews, then choose whether captions should be burned into the video.
 10. Select render quality and create the dub.
 11. Review the quality report. MP4 and SRT downloads unlock only after every automated gate passes.
 
-Recommended starting point: original voice preservation, moderate expression, 45–60% background audio, Clean captions and High quality.
+Recommended starting point: original voice preservation, moderate expression, 42% background audio, Clean Medium White captions and High quality.
 
 ![Dub configuration](docs/images/delivery.png)
 

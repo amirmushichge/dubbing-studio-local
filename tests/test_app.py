@@ -4,6 +4,7 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 from app import main as main_module
+from app.config import subtitle_force_style
 from app.main import app
 from app.pipeline import normalized_words, recovery_action, safe_output_name, select_background, write_srt
 from app import store as store_module
@@ -142,3 +143,15 @@ def test_busy_project_cannot_be_deleted(monkeypatch) -> None:
     monkeypatch.setattr(main_module, "get_project", lambda project_id: {"id": project_id, "status": "rendering"})
     response = TestClient(app).delete("/api/projects/example")
     assert response.status_code == 409
+
+
+def test_subtitle_controls_change_the_real_ass_style() -> None:
+    yellow = subtitle_force_style("social", "large", "yellow")
+    black_box = subtitle_force_style("boxed", "small", "black")
+    assert "FontName=Manrope" in yellow
+    assert "FontSize=24" in yellow
+    assert "PrimaryColour=&H0000D4FF" in yellow
+    assert "FontSize=16" in black_box
+    assert "PrimaryColour=&H00000000" in black_box
+    assert "OutlineColour=&H00FFFFFF" in black_box
+    assert "BackColour=&H90FFFFFF" in black_box

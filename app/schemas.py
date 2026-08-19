@@ -21,6 +21,8 @@ class RenderRequest(BaseModel):
     voice_id: str | None = None
     subtitle_enabled: bool = True
     subtitle_style: str = "clean"
+    subtitle_size: Literal["small", "medium", "large"] = "medium"
+    subtitle_color: Literal["white", "yellow", "black"] = "white"
     background_volume: float = Field(default=0.42, ge=0.0, le=1.0)
     expression: float = Field(default=0.5, ge=0.0, le=1.0)
     quality: Literal["draft", "balanced", "high"] = "high"
@@ -30,4 +32,3 @@ class RenderRequest(BaseModel):
 class PreviewRequest(BaseModel):
     language: str
     voice_id: str
-
