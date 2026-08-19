@@ -104,12 +104,16 @@ def synthesize(config_path: Path) -> None:
     for index, item in enumerate(lines):
         speaker = item["speaker"]
         raw = raw_dir / f"{index:04d}_{speaker}.wav"
-        if not raw.exists():
+        raw_text = raw.with_suffix(".txt")
+        current_text = item["translation"].strip()
+        cached_text = raw_text.read_text(encoding="utf-8").strip() if raw_text.exists() else None
+        if not raw.exists() or cached_text != current_text:
             wavs, sample_rate = model.generate_voice_clone(
-                text=item["translation"], language=config["tts_language"],
+                text=current_text, language=config["tts_language"],
                 voice_clone_prompt=prompts[speaker], do_sample=False,
             )
             sf.write(raw, wavs[0], sample_rate)
+            raw_text.write_text(current_text, encoding="utf-8")
         fitted = fitted_dir / f"{index:04d}_{speaker}.wav"
         speed = fit_line(raw, fitted, item["end"] - item["start"])
         audio, sample_rate = sf.read(fitted, dtype="float32")
@@ -189,4 +193,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

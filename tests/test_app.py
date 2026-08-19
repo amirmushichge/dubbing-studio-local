@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 from app import main as main_module
 from app.config import subtitle_force_style
 from app.main import app
-from app.pipeline import normalized_words, recovery_action, safe_output_name, select_background, write_srt
+from app.pipeline import normalized_words, recovery_action, redistribute_line_timing, safe_output_name, select_background, write_srt
 from app import store as store_module
 from app.store import delete_project, invalidate_current_export
 
@@ -155,3 +155,18 @@ def test_subtitle_controls_change_the_real_ass_style() -> None:
     assert "PrimaryColour=&H00000000" in black_box
     assert "OutlineColour=&H00FFFFFF" in black_box
     assert "BackColour=&H90FFFFFF" in black_box
+
+
+def test_short_line_borrows_silence_instead_of_becoming_robotically_fast() -> None:
+    lines = [
+        {"start": 0.0, "end": 1.0},
+        {"start": 2.0, "end": 2.44},
+    ]
+    change = redistribute_line_timing(lines, 1, required_speed=1.914, media_duration=2.8)
+    assert change is not None
+    assert lines[1]["start"] < 2.0
+    assert lines[1]["end"] > 2.44
+    assert lines[1]["start"] >= 1.12
+    assert lines[1]["end"] <= 2.68
+    new_slot = lines[1]["end"] - lines[1]["start"]
+    assert 0.44 * 1.914 / new_slot <= 1.26

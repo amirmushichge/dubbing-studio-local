@@ -138,6 +138,34 @@ def select_background(work: Path, source: Path, mock_mode: bool) -> Path:
     raise RuntimeError("Separated background audio is missing; refusing to mix the original speech under the dub")
 
 
+def redistribute_line_timing(
+    lines: list[dict], index: int, required_speed: float, media_duration: float,
+    target_speed: float = 1.25, reserve: float = 0.12,
+) -> dict | None:
+    """Borrow adjacent silence before shortening a translation beyond natural speech."""
+    line = lines[index]
+    start, end = float(line["start"]), float(line["end"])
+    slot = max(end - start, 0.01)
+    needed = max(0.0, slot * required_speed / target_speed - slot)
+    if needed <= 0.005:
+        return None
+    previous_end = float(lines[index - 1]["end"]) if index else 0.0
+    next_start = float(lines[index + 1]["start"]) if index + 1 < len(lines) else media_duration
+    before_available = max(0.0, start - previous_end - reserve)
+    after_available = max(0.0, next_start - end - reserve)
+    if before_available + after_available + 0.001 < needed:
+        return None
+    before = min(before_available, needed / 2)
+    after = min(after_available, needed - before)
+    before += min(before_available - before, needed - before - after)
+    line["start"] = round(start - before, 3)
+    line["end"] = round(end + after, 3)
+    return {
+        "index": index, "old_start": start, "old_end": end,
+        "new_start": line["start"], "new_end": line["end"],
+    }
+
+
 def render(project_id: str, request: dict) -> None:
     project = load_project(project_id)
     project.update({"status": "rendering", "render": request, "progress": 0})
@@ -179,16 +207,34 @@ def render(project_id: str, request: dict) -> None:
             execute(project_id, "mock_dub", ["ffmpeg", "-y", "-v", "error", "-i", str(source), "-vn", "-ar", "24000", "-ac", "1", str(work / "dub.wav")])
         else:
             qwen_command = [str(QWEN_PYTHON), str(WORKERS / "qwen_voice.py"), "synthesize", str(qwen_config_path)]
-            for timing_attempt in range(4):
+            for timing_attempt in range(24):
                 try:
                     execute(project_id, f"qwen_{timing_attempt + 1}", qwen_command, cwd=QWEN_ROOT)
                     break
                 except RuntimeError as exc:
                     match = re.search(r"Line requires ([\d.]+)x speed; shorten its translation: (\d{4})_", str(exc))
-                    if not match or timing_attempt == 3:
+                    if not match or timing_attempt == 23:
                         raise
                     required_speed = float(match.group(1))
                     line_index = int(match.group(2))
+                    translated_lines = json.loads(translation.read_text(encoding="utf-8"))
+                    adjustment = redistribute_line_timing(
+                        translated_lines, line_index, required_speed, project["media"]["duration"]
+                    )
+                    synthesis = work / "synthesis"
+                    fitted_candidates = (
+                        synthesis / "fitted" / f"{line_index:04d}_{segments[line_index]['speaker']}.wav",
+                        synthesis / "fitted" / f"{line_index:04d}_{segments[line_index]['speaker']}.trim.wav",
+                    )
+                    if adjustment:
+                        translation.write_text(json.dumps(translated_lines, ensure_ascii=False, indent=2), encoding="utf-8")
+                        add_event(
+                            project_id, "warning",
+                            f"Line {line_index + 1} used adjacent silence to preserve natural speech speed",
+                        )
+                        for candidate in fitted_candidates:
+                            candidate.unlink(missing_ok=True)
+                        continue
                     ratio = min(.88, 1.35 / required_speed * .92)
                     add_event(project_id, "warning", f"Line {line_index + 1} exceeds its time slot; shortening and synthesizing again")
                     execute(project_id, f"shorten_{line_index}_{timing_attempt + 1}", [
@@ -196,11 +242,10 @@ def render(project_id: str, request: dict) -> None:
                         "--index", str(line_index), "--model", str(HYMT_MODEL),
                         "--language", target["hymt"], "--ratio", str(ratio),
                     ], cwd=HYMT_ROOT)
-                    synthesis = work / "synthesis"
                     for candidate in (
                         synthesis / "raw" / f"{line_index:04d}_{segments[line_index]['speaker']}.wav",
-                        synthesis / "fitted" / f"{line_index:04d}_{segments[line_index]['speaker']}.wav",
-                        synthesis / "fitted" / f"{line_index:04d}_{segments[line_index]['speaker']}.trim.wav",
+                        synthesis / "raw" / f"{line_index:04d}_{segments[line_index]['speaker']}.txt",
+                        *fitted_candidates,
                     ):
                         candidate.unlink(missing_ok=True)
             manifest_path = work / "synthesis" / "manifest.json"
