@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 import librosa
@@ -9,6 +10,9 @@ import numpy as np
 import soundfile as sf
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.metrics import silhouette_score
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from app.diarization import merge_tiny_clusters
 
 
 def normalized_labels(labels: np.ndarray) -> list[int]:
@@ -32,38 +36,6 @@ def select_cluster_count(embeddings: np.ndarray) -> int:
         if score > best_score:
             best_count, best_score = count, score
     return best_count if best_score >= 0.12 else 1
-
-
-def merge_tiny_clusters(
-    labels: list[int],
-    embeddings: np.ndarray,
-    segments: list[dict],
-    max_seconds: float = 2.5,
-    max_segments: int = 2,
-    similarity_threshold: float = 0.82,
-) -> list[int]:
-    """Fold a tiny, strongly matching diarization fragment into its real voice."""
-    if len(set(labels)) < 2 or not len(embeddings):
-        return labels
-    merged = list(labels)
-    for label in sorted(set(labels)):
-        positions = [index for index, value in enumerate(merged) if value == label]
-        seconds = sum(float(segments[index]["end"]) - float(segments[index]["start"]) for index in positions)
-        if len(positions) > max_segments or seconds > max_seconds:
-            continue
-        centroid = embeddings[positions].mean(axis=0)
-        centroid /= max(float(np.linalg.norm(centroid)), 1e-8)
-        best_label, best_similarity = None, -1.0
-        for candidate in sorted(set(merged) - {label}):
-            candidate_positions = [index for index, value in enumerate(merged) if value == candidate]
-            candidate_centroid = embeddings[candidate_positions].mean(axis=0)
-            candidate_centroid /= max(float(np.linalg.norm(candidate_centroid)), 1e-8)
-            similarity = float(np.dot(centroid, candidate_centroid))
-            if similarity > best_similarity:
-                best_label, best_similarity = candidate, similarity
-        if best_label is not None and best_similarity >= similarity_threshold:
-            merged = [best_label if value == label else value for value in merged]
-    return normalized_labels(np.asarray(merged))
 
 
 def main() -> None:
@@ -101,7 +73,7 @@ def main() -> None:
         raw = AgglomerativeClustering(n_clusters=count, metric="cosine", linkage="average").fit_predict(matrix)
         labels = normalized_labels(raw)
         if args.count == "auto":
-            labels = merge_tiny_clusters(labels, matrix, segments)
+            labels = merge_tiny_clusters(labels, matrix.tolist(), segments)
     for item, label in zip(segments, labels):
         item["speaker"] = f"SPEAKER_{label:02d}"
 

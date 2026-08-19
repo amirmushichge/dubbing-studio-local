@@ -1,7 +1,6 @@
 import re
 from pathlib import Path
 
-import numpy as np
 from fastapi.testclient import TestClient
 
 from app import main as main_module
@@ -10,7 +9,7 @@ from app.main import app
 from app.pipeline import normalized_words, recovery_action, redistribute_line_timing, safe_output_name, select_background, write_srt
 from app import store as store_module
 from app.store import delete_project, invalidate_current_export
-from workers.cluster_speakers import merge_tiny_clusters
+from app.diarization import merge_tiny_clusters
 
 
 def test_catalog_has_languages_voices_and_subtitles() -> None:
@@ -175,9 +174,9 @@ def test_short_line_borrows_silence_instead_of_becoming_robotically_fast() -> No
 
 
 def test_tiny_matching_speaker_fragment_is_merged() -> None:
-    embeddings = np.asarray([
+    embeddings = [
         [1.0, 0.0], [0.98, 0.02], [0.96, 0.04], [0.0, 1.0],
-    ], dtype=np.float32)
+    ]
     segments = [
         {"start": 0.0, "end": 4.0}, {"start": 5.0, "end": 9.0},
         {"start": 10.0, "end": 10.8}, {"start": 11.0, "end": 15.0},
