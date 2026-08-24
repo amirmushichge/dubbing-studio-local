@@ -7,7 +7,7 @@ import time
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-from download_models import COMMON_MODELS, MUSETALK_MODELS, SEED_MODELS, TRANSLATION_MODELS
+from model_manifest import COMMON_MODELS, MUSETALK_MODELS, SEED_MODELS, TRANSLATION_MODELS
 
 GITHUB_REVISIONS = (
     ("QwenLM/Qwen3-TTS", "022e286b98fbec7e1e916cb940cdf532cd9f488e"),
