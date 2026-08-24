@@ -4,8 +4,17 @@ import json
 import subprocess
 from pathlib import Path
 
-
 VIDEO_SUFFIXES = {".mp4", ".mov", ".mkv", ".webm", ".m4v"}
+
+
+def _safe_int(*values: object) -> int:
+    for value in values:
+        try:
+            if value not in (None, "", "N/A"):
+                return int(value)  # type: ignore[arg-type]
+        except (TypeError, ValueError):
+            continue
+    return 0
 
 
 def run(command: list[str], log_path: Path | None = None, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
@@ -21,7 +30,7 @@ def run(command: list[str], log_path: Path | None = None, cwd: Path | None = Non
 def probe(path: Path) -> dict:
     result = run([
         "ffprobe", "-v", "error", "-show_entries",
-        "format=duration,size:stream=index,codec_type,codec_name,width,height,r_frame_rate,sample_rate,channels",
+        "format=duration,size,bit_rate:stream=index,codec_type,codec_name,width,height,r_frame_rate,bit_rate,sample_rate,channels",
         "-of", "json", str(path),
     ])
     data = json.loads(result.stdout)
@@ -34,6 +43,7 @@ def probe(path: Path) -> dict:
         "height": video.get("height"),
         "fps": video.get("r_frame_rate"),
         "video_codec": video.get("codec_name"),
+        "video_bitrate": _safe_int(video.get("bit_rate"), data.get("format", {}).get("bit_rate")),
         "audio_codec": audio.get("codec_name"),
         "sample_rate": audio.get("sample_rate"),
         "channels": audio.get("channels"),

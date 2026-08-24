@@ -10,7 +10,6 @@ from typing import Any
 
 from .config import PROJECTS_ROOT
 
-
 _lock = threading.RLock()
 
 

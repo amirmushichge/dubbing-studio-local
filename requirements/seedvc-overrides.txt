@@ -1,0 +1,4 @@
+# descript-audiotools declares protobuf<3.20 through optional training tooling.
+# Seed-VC inference does not use that legacy protobuf API; the secure runtime
+# override is installed after the upstream-compatible dependency set.
+protobuf==5.29.6

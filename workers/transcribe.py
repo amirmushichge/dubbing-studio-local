@@ -13,9 +13,11 @@ def main() -> None:
     parser.add_argument("output", type=Path)
     parser.add_argument("--language", default="auto")
     parser.add_argument("--model", default="large-v3")
+    parser.add_argument("--device", choices=("cuda", "cpu"), default="cuda")
+    parser.add_argument("--compute-type", default="float16")
     args = parser.parse_args()
 
-    model = WhisperModel(args.model, device="cuda", compute_type="float16")
+    model = WhisperModel(args.model, device=args.device, compute_type=args.compute_type)
     language = None if args.language == "auto" else args.language
     segments, info = model.transcribe(
         str(args.audio), language=language, beam_size=5, best_of=5,

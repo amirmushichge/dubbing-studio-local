@@ -11,7 +11,7 @@
 - original voice cloning and four catalog voices;
 - cached on-demand voice previews;
 - six caption presets, full disable and separate SRT;
-- background level, expression and three quality levels;
+- automatic source-matched visual quality, natural delivery and original background level;
 - final playback, downloads and QA report;
 - English AmirStyle interface for desktop and mobile.
 

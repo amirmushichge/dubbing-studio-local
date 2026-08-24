@@ -12,7 +12,9 @@ from sklearn.cluster import AgglomerativeClustering
 from sklearn.metrics import silhouette_score
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from app.diarization import merge_tiny_clusters
+from app.diarization import merge_tiny_clusters, split_segments_on_word_gaps
+
+MAX_REFERENCE_SECONDS = 12.0
 
 
 def normalized_labels(labels: np.ndarray) -> list[int]:
@@ -52,7 +54,7 @@ def main() -> None:
     payload = json.loads(args.transcript.read_text(encoding="utf-8"))
     if isinstance(payload, list):
         payload = {"language": "unknown", "language_probability": None, "segments": payload}
-    segments = payload["segments"]
+    segments = split_segments_on_word_gaps(payload["segments"])
     waveform, sample_rate = librosa.load(args.audio, sr=16000, mono=True)
     encoder = VoiceEncoder()
     embeddings = []
@@ -85,7 +87,7 @@ def main() -> None:
         total = []
         length = 0
         for clip in selected:
-            remaining = round(25 * sample_rate) - length
+            remaining = round(MAX_REFERENCE_SECONDS * sample_rate) - length
             if remaining <= 0:
                 break
             piece = clip[:remaining]

@@ -1,25 +1,35 @@
-name: Ошибка
-description: Сообщить о воспроизводимой проблеме
+name: Bug report
+description: Report a reproducible problem
 title: "[Bug]: "
 labels: [bug]
 body:
   - type: checkboxes
     attributes:
-      label: Перед отправкой
+      label: Before submitting
       options:
-        - label: Я запустил doctor.ps1 и повторил setup.bat
+        - label: I ran the platform doctor and repeated setup
           required: true
-        - label: Я имею право использовать голоса из видео
+        - label: I have permission to use every voice in the source media
           required: true
-  - type: textarea
+        - label: I removed private video, audio, paths and usernames from this report
+          required: true
+  - type: dropdown
     attributes:
-      label: Что произошло?
-      description: Опишите ожидаемый и фактический результат.
+      label: Platform
+      options:
+        - Windows 10/11 with NVIDIA CUDA
+        - macOS 14+ on Apple Silicon
     validations:
       required: true
   - type: textarea
     attributes:
-      label: Диагностика
-      description: Приложите вывод doctor.ps1 и соответствующий лог из data/projects/.../logs. Не публикуйте приватное видео.
+      label: What happened?
+      description: Describe the expected and actual result, including the stage that failed.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Diagnostics
+      description: Paste sanitized doctor output and the relevant text log. Use synthetic media for a reproduction; never publish a private source video or voice sample.
     validations:
       required: true

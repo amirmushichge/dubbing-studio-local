@@ -113,12 +113,33 @@ function Ensure-Repo([string]$Url, [string]$Path, [string]$Commit) {
     }
 }
 
+function Ensure-Sox {
+    if (Get-Command sox -ErrorAction SilentlyContinue) { return }
+    $Archive = Join-Path $RuntimeRoot 'bootstrap\sox-14.4.2-win32.zip'
+    $Destination = Join-Path $RuntimeRoot 'tools\sox'
+    if ($Plan) { Write-Host "[plan] install portable SoX 14.4.2 -> $Destination"; return }
+    Step 'Installing the SoX audio utility'
+    New-Item -ItemType Directory -Force -Path (Split-Path $Archive -Parent), $Destination | Out-Null
+    if ((Test-Path -LiteralPath $Archive) -and (Get-Item -LiteralPath $Archive).Length -lt 1MB) {
+        Remove-Item -LiteralPath $Archive -Force
+    }
+    if (-not (Test-Path -LiteralPath $Archive)) {
+        & curl.exe -fL --retry 3 'https://downloads.sourceforge.net/project/sox/sox/14.4.2/sox-14.4.2-win32.zip' -o $Archive
+        if ($LASTEXITCODE -ne 0) { throw 'Could not download SoX.' }
+    }
+    Expand-Archive -LiteralPath $Archive -DestinationPath $Destination -Force
+    $sox = Get-ChildItem -LiteralPath $Destination -Recurse -Filter sox.exe | Select-Object -First 1
+    if (-not $sox) { throw 'SoX was downloaded, but sox.exe is missing from the archive.' }
+    $env:Path = "$($sox.Directory.FullName);$env:Path"
+}
+
 try {
     Step 'Checking the system'
     if ($env:OS -ne 'Windows_NT') { throw 'Automatic setup currently supports Windows 10/11 only.' }
     New-Item -ItemType Directory -Force -Path $RuntimeRoot | Out-Null
     if (-not (Get-Command git -ErrorAction SilentlyContinue)) { Install-WingetPackage 'Git.Git' 'Git' }
     if (-not (Get-Command ffmpeg -ErrorAction SilentlyContinue)) { Install-WingetPackage 'Gyan.FFmpeg' 'FFmpeg' }
+    Ensure-Sox
     $BasePython = Find-Python310
     if (-not $BasePython) {
         Install-WingetPackage 'Python.Python.3.10' 'Python 3.10'
@@ -170,6 +191,23 @@ try {
     Pip $SeedPython @('install', '--upgrade', 'pip', 'wheel')
     Pip $SeedPython @('install', 'torch==2.7.1', 'torchvision==0.22.1', 'torchaudio==2.7.1', '--index-url', 'https://download.pytorch.org/whl/cu128')
     Pip $SeedPython @('install', '-r', (Join-Path $ProjectRoot 'requirements\seedvc-extra.txt'))
+    Pip $SeedPython @('install', '--upgrade', '--no-deps', '-r', (Join-Path $ProjectRoot 'requirements\seedvc-overrides.txt'))
+
+    $MuseRoot = Join-Path $RuntimeRoot 'musetalk'
+    Step 'Installing optional local lip synchronization'
+    Ensure-Repo 'https://github.com/TMElyralab/MuseTalk.git' $MuseRoot '0a89dec45a0192b824e3cf4daf96c239440c5ed8'
+    $MusePython = Ensure-Venv (Join-Path $MuseRoot '.venv') $BasePython
+    Pip $MusePython @('install', '--upgrade', 'pip', 'wheel')
+    Pip $MusePython @('install', 'torch==2.0.1', 'torchvision==0.15.2', 'torchaudio==2.0.2', '--index-url', 'https://download.pytorch.org/whl/cu118')
+    Pip $MusePython @('install', '-r', (Join-Path $MuseRoot 'requirements.txt'))
+    Pip $MusePython @('install', '--no-cache-dir', '-U', 'openmim')
+    if (-not $Plan) {
+        foreach ($Package in @('mmengine', 'mmcv==2.0.1', 'mmdet==3.1.0', 'mmpose==1.1.0')) {
+            & $MusePython -m mim install $Package
+            if ($LASTEXITCODE -ne 0) { throw "Could not install MuseTalk dependency: $Package" }
+        }
+    }
+    else { Write-Host '[plan] install pinned MuseTalk face tracking dependencies' }
 
     if (-not $SkipModels) {
         Step 'Downloading AI models (about 30 GB; interrupted downloads can resume safely)'
@@ -183,7 +221,7 @@ try {
     }
 
     if (-not $Plan) {
-        $state = @{ installed_at = (Get-Date).ToString('o'); runtime = $RuntimeRoot; version = '0.1.0' } | ConvertTo-Json
+        $state = @{ installed_at = (Get-Date).ToString('o'); runtime = $RuntimeRoot; version = '0.1.0-alpha.1' } | ConvertTo-Json
         Set-Content -LiteralPath (Join-Path $RuntimeRoot 'install-state.json') -Value $state -Encoding UTF8
         Step 'Running final diagnostics'
         & (Join-Path $ProjectRoot 'doctor.ps1')

@@ -4,6 +4,8 @@ $python = Join-Path $projectRoot '.venv\Scripts\python.exe'
 $runtimeRoot = if ($env:DUBBING_STUDIO_RUNTIME) { $env:DUBBING_STUDIO_RUNTIME } else { Join-Path $projectRoot 'runtime' }
 $portableFfmpeg = Get-ChildItem -LiteralPath (Join-Path $runtimeRoot 'tools\ffmpeg') -Recurse -Filter ffmpeg.exe -ErrorAction SilentlyContinue | Select-Object -First 1
 if ($portableFfmpeg) { $env:Path = "$($portableFfmpeg.Directory.FullName);$env:Path" }
+$portableSox = Get-ChildItem -LiteralPath (Join-Path $runtimeRoot 'tools\sox') -Recurse -Filter sox.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+if ($portableSox) { $env:Path = "$($portableSox.Directory.FullName);$env:Path" }
 
 if (-not (Test-Path -LiteralPath $python)) {
     throw 'Dubbing Studio is not installed. Run setup.bat and wait for the success message.'

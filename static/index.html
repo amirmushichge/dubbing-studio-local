@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#f3f2ed">
   <title>Dubbing Studio — Local voice translation</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="/static/styles.css?v=20260819-caption-controls">
+<link rel="stylesheet" href="/static/styles.css?v=20260824-source-quality">
   <link rel="stylesheet" href="/static/speaker.css">
 </head>
 <body>
@@ -36,8 +36,8 @@
         <div class="hero-grid">
           <div class="hero-copy">
             <span class="hero-index">01 / CREATE</span>
-            <h2>Every language<br><em>Still their voice</em></h2>
-            <p>Turn one video into a native-sounding dub while preserving each speaker’s identity, timing and delivery.</p>
+            <h2>Upload a video<br><em>Get a local dub</em></h2>
+            <p>Choose a language, make a few simple adjustments and export a ready-to-share translation on your computer.</p>
             <div class="hero-meta"><span>10 output languages</span><span>Multi-speaker</span><span>100% local</span></div>
           </div>
 
@@ -54,17 +54,17 @@
               <small>MP4 · MOV · MKV · WEBM · up to 12 GB</small>
             </label>
             <div class="signal-card" aria-hidden="true">
-              <span class="signal-label">VOICE PRINT</span>
+              <span class="signal-label">VOICE MATCH</span>
               <div class="waveform"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-              <span class="signal-meta">Identity preserved</span>
+              <span class="signal-meta">Up to 88%</span>
             </div>
           </div>
         </div>
 
         <div class="feature-strip">
           <div><span>01</span><strong>Private by default</strong><small>Your media stays on this machine.</small></div>
-          <div><span>02</span><strong>Voice continuity</strong><small>A stable profile for every speaker.</small></div>
-          <div><span>03</span><strong>Quality gates</strong><small>Timing, clarity, similarity and loudness.</small></div>
+          <div><span>02</span><strong>Voice matching</strong><small>Up to 88%, measured per speaker.</small></div>
+          <div><span>03</span><strong>Quality report</strong><small>Timing, clarity, similarity and loudness.</small></div>
         </div>
       </section>
 
@@ -76,7 +76,13 @@
             <h2 id="projectName"></h2>
             <div class="meta" id="projectMeta"></div>
             <div class="progress-wrap"><div class="progress-label"><span id="stageLabel">Ready to analyze</span><b id="progressLabel">0%</b></div><div class="progress-track"><i id="progressBar"></i></div></div>
+            <button class="secondary stop-project hidden" id="cancelProjectButton" type="button">Stop processing</button>
           </div>
+        </div>
+
+        <div id="projectError" class="project-error hidden" role="alert">
+          <div><span>PROCESSING ERROR</span><strong id="projectErrorTitle">The dub stopped</strong><p id="projectErrorMessage"></p></div>
+          <button class="primary" id="retryRenderButton" type="button">Retry dub <span>→</span></button>
         </div>
 
         <nav class="steps" id="steps">
@@ -91,7 +97,7 @@
             <div class="panel-head"><div><span class="kicker">SOURCE</span><h3>What are we analyzing?</h3></div><span class="panel-number">01</span></div>
             <label>Original language<select id="sourceLanguage"><option value="auto">Detect automatically</option></select></label>
             <label>Number of speakers<select id="speakerCount"><option value="auto">Detect automatically</option><option value="1">1 speaker</option><option value="2">2 speakers</option><option value="3">3 speakers</option><option value="4">4 speakers</option></select></label>
-            <div class="note">For multiple voices, the studio builds and locks a separate identity profile for each person.</div>
+            <div class="note">For multiple voices, the studio builds a separate match profile for each person.</div>
           </article>
           <article class="panel process-panel">
             <div class="panel-head"><div><span class="kicker">PIPELINE</span><h3>Local processing</h3></div><span class="panel-number">02</span></div>
@@ -110,21 +116,18 @@
         <div id="deliveryPanel" class="step-panel hidden">
           <div class="settings-grid">
             <article class="panel span-2"><div class="panel-head"><div><span class="kicker">LANGUAGE</span><h3>Translation language</h3></div><span class="panel-number">01</span></div><div id="targetLanguages" class="language-grid"></div></article>
-            <article class="panel span-2"><div class="panel-head"><div><span class="kicker">VOICE</span><h3>How should the translation sound?</h3></div><span class="panel-number">02</span></div><div class="mode-grid"><label class="choice-card selected"><input type="radio" name="voiceMode" value="clone" checked><span class="choice-icon">◎</span><strong>Preserve original voices</strong><small>Each speaker’s timbre with native pronunciation.</small></label><label class="choice-card" id="catalogModeCard"><input type="radio" name="voiceMode" value="catalog"><span class="choice-icon">◌</span><strong>Choose a new voice</strong><small>Available for single-speaker videos.</small></label></div><div id="voiceCatalog" class="voice-grid hidden"></div></article>
-            <article class="panel span-2 caption-panel"><div class="subtitle-heading"><div><span class="kicker">SUBTITLES</span><h3>Caption treatment</h3></div><label class="switch"><input id="subtitleEnabled" type="checkbox" checked><span></span><b>Enabled</b></label></div><div id="subtitleControls"><div id="subtitleStyles" class="subtitle-grid" data-caption-size="medium" data-caption-color="white"></div><div class="caption-customize"><fieldset><legend>Size</legend><div class="caption-segment"><label><input type="radio" name="subtitleSize" value="small"><span>Small</span></label><label class="selected"><input type="radio" name="subtitleSize" value="medium" checked><span>Medium</span></label><label><input type="radio" name="subtitleSize" value="large"><span>Large</span></label></div></fieldset><fieldset><legend>Color</legend><div class="caption-color"><label class="selected"><input type="radio" name="subtitleColor" value="white" checked><i class="swatch white"></i><span>White</span></label><label><input type="radio" name="subtitleColor" value="yellow"><i class="swatch yellow"></i><span>Yellow</span></label><label><input type="radio" name="subtitleColor" value="black"><i class="swatch black"></i><span>Black</span></label></div></fieldset></div><label class="check-row"><input id="burnSubtitles" type="checkbox" checked> Burn captions into the video <small>A separate SRT is always saved.</small></label></div></article>
-            <article class="panel"><span class="kicker">MIX</span><h3>Background audio</h3><label class="range-label"><span>Music & ambience level</span><b id="backgroundValue">42%</b></label><input id="backgroundVolume" type="range" min="0" max="100" value="42"></article>
-            <article class="panel"><span class="kicker">DELIVERY</span><h3>Performance</h3><label class="range-label"><span>Restrained — expressive</span><b id="expressionValue">50%</b></label><input id="expression" type="range" min="0" max="100" value="50"><label>Render quality<select id="quality"><option value="high">High</option><option value="balanced">Balanced</option><option value="draft">Draft</option></select></label></article>
+            <article class="panel span-2"><div class="panel-head"><div><span class="kicker">VOICE</span><h3>How should the translation sound?</h3></div><span class="panel-number">02</span></div><div class="mode-grid"><label class="choice-card selected"><input type="radio" name="voiceMode" value="clone" checked><span class="choice-icon">◎</span><strong>Match source voices</strong><small>Matches each speaker’s timbre up to 88%; results vary by source.</small></label><label class="choice-card" id="catalogModeCard"><input type="radio" name="voiceMode" value="catalog"><span class="choice-icon">◌</span><strong>Choose a new voice</strong><small>Available for single-speaker videos.</small></label></div><div id="voiceCatalog" class="voice-grid hidden"></div></article>
           </div>
-          <div class="render-bar"><div><strong>Everything runs locally.</strong><small>Intermediate files and a quality report remain with the project.</small></div><button class="primary" id="renderButton">Create dub <span>→</span></button></div>
+          <div class="render-bar"><div><strong>Everything runs locally.</strong><small>Intermediate files and a quality report remain with the project.</small></div><div class="render-actions"><label class="switch lip-sync-switch" id="lipSyncSwitch"><input id="lipSyncEnabled" type="checkbox"><span></span><em><b>Lip sync</b><small>Match mouth movement · takes longer</small></em></label><button class="primary" id="renderButton">Create dub <span>→</span></button></div></div>
         </div>
 
-        <div id="resultPanel" class="step-panel hidden"><div class="result-grid"><article class="panel result-player"><video id="resultVideo" controls></video></article><article class="panel result-summary"><span class="success-mark" id="resultMark">✓</span><span class="kicker" id="resultKicker">EXPORT READY</span><h3 id="resultTitle">Your video is ready</h3><p id="qualitySummary"></p><div class="quality-list" id="qualityList"></div><a class="primary wide button-link" id="downloadVideo" download>Download video</a><a class="secondary wide button-link" id="downloadSrt" download>Download SRT</a></article></div></div>
+        <div id="resultPanel" class="step-panel hidden"><div class="result-grid"><article class="panel result-player"><div class="result-video-stage" id="resultVideoStage"><video id="resultVideo" controls></video><span id="captionOverlay" class="caption-overlay">Your subtitle</span></div><div class="export-caption-panel"><div class="subtitle-heading"><div><span class="kicker">SUBTITLES</span><h3>Caption treatment</h3><p>Drag the caption directly on the video or use the position controls.</p></div><label class="switch"><input id="subtitleEnabled" type="checkbox" checked><span></span><b>Enabled</b></label></div><div id="subtitleControls"><div id="subtitleStyles" class="subtitle-grid" data-caption-size="medium" data-caption-color="white"></div><div class="caption-customize"><fieldset><legend>Base size</legend><div class="caption-segment"><label><input type="radio" name="subtitleSize" value="small"><span>Small</span></label><label class="selected"><input type="radio" name="subtitleSize" value="medium" checked><span>Medium</span></label><label><input type="radio" name="subtitleSize" value="large"><span>Large</span></label></div></fieldset><fieldset><legend>Color</legend><div class="caption-color"><label class="selected"><input type="radio" name="subtitleColor" value="white" checked><i class="swatch white"></i><span>White</span></label><label><input type="radio" name="subtitleColor" value="yellow"><i class="swatch yellow"></i><span>Yellow</span></label><label><input type="radio" name="subtitleColor" value="black"><i class="swatch black"></i><span>Black</span></label></div></fieldset></div><div class="caption-transform"><label class="range-label"><span>Scale</span><b id="captionScaleValue">100%</b></label><input id="captionScale" type="range" min="50" max="200" value="100"><label class="range-label"><span>Horizontal position</span><b id="captionXValue">50%</b></label><input id="captionX" type="range" min="5" max="95" value="50"><label class="range-label"><span>Vertical position</span><b id="captionYValue">88%</b></label><input id="captionY" type="range" min="10" max="95" value="88"></div><div class="caption-export-actions"><small>A separate SRT is always saved.</small><button class="primary" id="applyCaptionsButton" type="button">Apply caption changes <span>→</span></button></div></div></div></article><article class="panel result-summary"><span class="success-mark" id="resultMark">✓</span><span class="kicker" id="resultKicker">EXPORT READY</span><h3 id="resultTitle">Your video is ready</h3><p id="qualitySummary"></p><div class="quality-list" id="qualityList"></div><a class="primary wide button-link" id="downloadVideo" download>Download video</a><a class="secondary wide button-link" id="downloadSrt" download>Download SRT</a></article></div></div>
 
         <details class="log-panel"><summary>Project activity <span id="eventCount">0</span></summary><div id="eventLog"></div></details>
       </section>
     </main>
   </div>
   <div class="toast" id="toast"></div>
-  <script src="/static/app.js?v=20260819-caption-controls"></script>
+  <script src="/static/app.js?v=20260824-live-reconnect"></script>
 </body>
 </html>
